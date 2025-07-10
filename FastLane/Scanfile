@@ -1,7 +1,7 @@
 project "NeuroNote-UIKit.xcodeproj"
 scheme "NeuroNote-UIKit"
 sdk "iphonesimulator"
-device "iPhone 15"
+device "iPhone 16 Pro"
 code_coverage true
 xcargs "-parallelizeTargets"
 prelaunch_simulator true
