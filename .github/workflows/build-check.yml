@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: iOS Build Tests
-    runs-on: macos-13
+    runs-on: macos-15
 
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
@@ -19,7 +19,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 15.2
+          xcode-version: 16.4
 
       - uses: ruby/setup-ruby@v1
         with:
