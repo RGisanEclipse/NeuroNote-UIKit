@@ -1,0 +1,6 @@
+# fastlane
+Fastlane/report.xml
+Fastlane/test_output
+
+# Xcode build artifacts
+Build/
