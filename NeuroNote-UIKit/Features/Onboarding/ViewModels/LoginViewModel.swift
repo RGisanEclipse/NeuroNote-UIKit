@@ -11,7 +11,7 @@ struct AlertContent {
     let title: String
     let message: String
     let shouldBeRed: Bool
-    let imageName: String
+    let animationName: String
 }
 
 @MainActor
@@ -29,7 +29,7 @@ class LoginViewModel {
             title: "Forgot Password?",
             message: "Don't worry, we've got you!",
             shouldBeRed: false,
-            imageName: Constants.moodImages.feared
+            animationName: Constants.animations.unsureStar
         ))
     }
 
@@ -79,13 +79,13 @@ class LoginViewModel {
                     alertContent = AlertContent(title: pres.title,
                                                 message: pres.message,
                                                 shouldBeRed: pres.shouldBeRed,
-                                                imageName: pres.imageName)
+                                                animationName: pres.animationName)
                 } else {
                     alertContent = AlertContent(
                         title: "We Dunno Either 🤷‍♂️",
                         message: "Seems like we've hit a new error. We'll check it out",
                         shouldBeRed: false,
-                        imageName: Constants.moodImages.feared
+                        animationName: Constants.animations.unsureStar
                     )
                 }
 

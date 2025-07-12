@@ -20,7 +20,7 @@ final class LoginViewModelTests: XCTestCase {
 
         XCTAssertEqual(receivedAlert?.title, "Forgot Password?")
         XCTAssertEqual(receivedAlert?.message, "Don't worry, we've got you!")
-        XCTAssertEqual(receivedAlert?.imageName, Constants.moodImages.feared)
+        XCTAssertEqual(receivedAlert?.animationName, Constants.animations.unsureStar)
         XCTAssertFalse(receivedAlert?.shouldBeRed ?? true)
     }
 
