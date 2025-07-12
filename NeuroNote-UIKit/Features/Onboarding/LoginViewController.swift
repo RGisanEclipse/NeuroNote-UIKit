@@ -294,7 +294,7 @@ class LoginViewController: UIViewController {
             let alert = OkAlertView(title: alertContent.title,
                                     message: alertContent.message,
                                     isError: alertContent.shouldBeRed,
-                                    icon: UIImage(named: alertContent.imageName))
+                                    icon: alertContent.animationName)
             alert.translatesAutoresizingMaskIntoConstraints = false
             self.view.addSubview(alert)
             NSLayoutConstraint.activate([

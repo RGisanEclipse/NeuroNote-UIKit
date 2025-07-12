@@ -16,7 +16,13 @@ struct Constants{
         static let angry  = "angryFace"
         
     }
-    
+    struct animations{
+        
+        static let angryStar = "angry-star"
+        static let unsureStar = "unsure-star"
+        static let thumbsUp = "birdie-success"
+        
+    }
     struct LaunchScreenConstants{
         
         static let logoImageName = "NeuroNote"

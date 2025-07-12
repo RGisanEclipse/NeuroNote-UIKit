@@ -6,13 +6,14 @@
 //
 
 import UIKit
+import Lottie
 
 class OkAlertView: UIView {
     
     // MARK: - Subviews
     private let dimBackground = UIView()
     private let alertBox = UIView()
-    private let badgeImageView = UIImageView()
+    private let badgeAnimationView = LottieAnimationView()
     private let titleLabel = UILabel()
     private let messageLabel = UILabel()
     private let okButton = UIButton(type: .system)
@@ -21,14 +22,14 @@ class OkAlertView: UIView {
     init(title: String,
          message: String,
          isError: Bool,
-         icon: UIImage? = UIImage(systemName: "face.smiling")) {
+         icon: String) {
         
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         
         setupDimBackground()
         setupAlertBox()
-        setupBadge(icon: icon)
+        setupBadge(with: icon)
         setupTitle(title, isError)
         setupMessage(message)
         setupButton(isError)
@@ -60,15 +61,24 @@ class OkAlertView: UIView {
         addSubview(alertBox)
     }
     
-    private func setupBadge(icon: UIImage?) {
-        badgeImageView.translatesAutoresizingMaskIntoConstraints = false
-        badgeImageView.image = icon
-        badgeImageView.contentMode = .scaleAspectFit
-        badgeImageView.layer.borderColor = UIColor.white.cgColor
-        badgeImageView.clipsToBounds = true
-        badgeImageView.alpha = 0
-        badgeImageView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        addSubview(badgeImageView)
+    private func setupBadge(with icon: String) {
+        guard
+            let url = Bundle.main.url(forResource: icon, withExtension: "json"),
+            let animation = LottieAnimation.filepath(url.path)
+        else {
+            assertionFailure("Could not load resource")
+            return
+        }
+
+        badgeAnimationView.animation          = animation
+        badgeAnimationView.translatesAutoresizingMaskIntoConstraints = false
+        badgeAnimationView.contentMode        = .scaleAspectFit
+        badgeAnimationView.loopMode           = .loop
+        badgeAnimationView.backgroundBehavior = .pauseAndRestore
+        badgeAnimationView.alpha              = 0
+        badgeAnimationView.transform          = CGAffineTransform(scaleX: 0.8, y: 0.8)
+
+        addSubview(badgeAnimationView)
     }
     
     private func setupTitle(_ text: String, _ isError: Bool) {
@@ -110,10 +120,10 @@ class OkAlertView: UIView {
             alertBox.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.8),
             
             // Badge overlaps top-left
-            badgeImageView.widthAnchor.constraint(equalToConstant: 60),
-            badgeImageView.heightAnchor.constraint(equalTo: badgeImageView.widthAnchor),
-            badgeImageView.leadingAnchor.constraint(equalTo: alertBox.leadingAnchor, constant: -15),
-            badgeImageView.topAnchor.constraint(equalTo: alertBox.topAnchor, constant: -28),
+            badgeAnimationView.widthAnchor.constraint(equalToConstant: 60),
+            badgeAnimationView.heightAnchor.constraint(equalTo: badgeAnimationView.widthAnchor),
+            badgeAnimationView.leadingAnchor.constraint(equalTo: alertBox.leadingAnchor, constant: -15),
+            badgeAnimationView.topAnchor.constraint(equalTo: alertBox.topAnchor, constant: -28),
             
             // Title / message / button
             titleLabel.topAnchor.constraint(equalTo: alertBox.topAnchor, constant: 20),
@@ -141,8 +151,10 @@ class OkAlertView: UIView {
                        options: .curveEaseInOut) {
             self.alertBox.alpha = 1
             self.alertBox.transform = .identity
-            self.badgeImageView.alpha = 1
-            self.badgeImageView.transform = .identity
+            self.badgeAnimationView.alpha = 1
+            self.badgeAnimationView.transform = .identity
+        } completion: { _ in
+            self.badgeAnimationView.play()
         }
     }
     
@@ -159,6 +171,6 @@ class OkAlertView: UIView {
     OkAlertView(title: "Alert",
                 message: "Message",
                 isError: false,
-                icon: UIImage(named: Constants.moodImages.feared)
+                icon: "birdie-success"
     )
 }

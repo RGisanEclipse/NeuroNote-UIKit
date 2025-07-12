@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B944ECC52E2290B600393FAF /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = B944ECC42E2290B600393FAF /* Lottie */; };
+		B944ECC72E2290CB00393FAF /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = B944ECC62E2290CB00393FAF /* Lottie */; };
+		B944EDA02E22CA1800393FAF /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B944ED9F2E22CA1800393FAF /* IQKeyboardManagerSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B920E30B2E1F842000AD6C65 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,6 +35,15 @@
 			);
 			target = B920E2E72E1F82D600AD6C65 /* NeuroNote-UIKit */;
 		};
+		B944ED982E22991500393FAF /* Exceptions for "NeuroNote-UIKit" folder in "NeuroNote-UIKitTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Core/UI/LottieAnimations/angry-star.json",
+				"Core/UI/LottieAnimations/birdie-success.json",
+				"Core/UI/LottieAnimations/unsure-star.json",
+			);
+			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -36,6 +51,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B920E2FD2E1F82D700AD6C65 /* Exceptions for "NeuroNote-UIKit" folder in "NeuroNote-UIKit" target */,
+				B944ED982E22991500393FAF /* Exceptions for "NeuroNote-UIKit" folder in "NeuroNote-UIKitTests" target */,
 			);
 			path = "NeuroNote-UIKit";
 			sourceTree = "<group>";
@@ -52,6 +68,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B944ECC52E2290B600393FAF /* Lottie in Frameworks */,
+				B944EDA02E22CA1800393FAF /* IQKeyboardManagerSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +77,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B944ECC72E2290CB00393FAF /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +122,8 @@
 			);
 			name = "NeuroNote-UIKit";
 			packageProductDependencies = (
+				B944ECC42E2290B600393FAF /* Lottie */,
+				B944ED9F2E22CA1800393FAF /* IQKeyboardManagerSwift */,
 			);
 			productName = "NeuroNote-UIKit";
 			productReference = B920E2E82E1F82D600AD6C65 /* NeuroNote-UIKit.app */;
@@ -126,6 +147,7 @@
 			);
 			name = "NeuroNote-UIKitTests";
 			packageProductDependencies = (
+				B944ECC62E2290CB00393FAF /* Lottie */,
 			);
 			productName = "NeuroNote-UIKitTests";
 			productReference = B920E3072E1F842000AD6C65 /* NeuroNote-UIKitTests.xctest */;
@@ -160,6 +182,10 @@
 			);
 			mainGroup = B920E2DF2E1F82D600AD6C65;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B944ECBE2E228F6200393FAF /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
+				B944ECC32E2290B600393FAF /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B920E2E92E1F82D600AD6C65 /* Products */;
 			projectDirPath = "";
@@ -459,6 +485,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B944ECBE2E228F6200393FAF /* XCRemoteSwiftPackageReference "IQKeyboardManager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hackiftekhar/IQKeyboardManager.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.1;
+			};
+		};
+		B944ECC32E2290B600393FAF /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B944ECC42E2290B600393FAF /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B944ECC32E2290B600393FAF /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		B944ECC62E2290CB00393FAF /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B944ECC32E2290B600393FAF /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		B944ED9F2E22CA1800393FAF /* IQKeyboardManagerSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B944ECBE2E228F6200393FAF /* XCRemoteSwiftPackageReference "IQKeyboardManager" */;
+			productName = IQKeyboardManagerSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B920E2E02E1F82D600AD6C65 /* Project object */;
 }
