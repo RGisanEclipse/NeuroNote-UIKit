@@ -40,6 +40,8 @@
 			membershipExceptions = (
 				"Core/UI/LottieAnimations/angry-star.json",
 				"Core/UI/LottieAnimations/birdie-success.json",
+				Core/UI/LottieAnimations/clouds.json,
+				"Core/UI/LottieAnimations/happy-sun.json",
 				"Core/UI/LottieAnimations/unsure-star.json",
 			);
 			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;

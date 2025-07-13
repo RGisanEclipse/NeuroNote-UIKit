@@ -1,5 +1,5 @@
 //
-//  LoginAlertView.swift
+//  OkAlertView.swift
 //  NeuroNote
 //
 //  Created by Eclipse on 29/06/25.
@@ -11,121 +11,141 @@ import Lottie
 class OkAlertView: UIView {
     
     // MARK: - Subviews
-    private let dimBackground = UIView()
-    private let alertBox = UIView()
-    private let badgeAnimationView = LottieAnimationView()
-    private let titleLabel = UILabel()
-    private let messageLabel = UILabel()
-    private let okButton = UIButton(type: .system)
     
+    private let dimBackground: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.2)
+        return view
+    }()
+    
+    private let alertBox: UIVisualEffectView = {
+        let blur = UIBlurEffect(style: .systemUltraThinMaterialLight)
+        let view = UIVisualEffectView(effect: blur)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.layer.cornerRadius = 20
+        view.clipsToBounds = true
+        view.alpha = 0
+        view.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.20).cgColor
+        return view
+    }()
+    
+    private let badgeAnimationView: LottieAnimationView = {
+        let view = LottieAnimationView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.contentMode = .scaleAspectFit
+        view.loopMode = .loop
+        view.backgroundBehavior = .pauseAndRestore
+        view.alpha = 0
+        view.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        return view
+    }()
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont(name: Fonts.MontserratSemiBold, size: 18) ?? .boldSystemFont(ofSize: 18)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let messageLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont(name: Fonts.MontserratRegular, size: 16) ?? .systemFont(ofSize: 16)
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.textColor = .black
+        return label
+    }()
+    
+    private var okButton: GradientButton!
+
     // MARK: - Init
+    
     init(title: String,
          message: String,
          isError: Bool,
          icon: String) {
-        
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         
-        setupDimBackground()
-        setupAlertBox()
-        setupBadge(with: icon)
-        setupTitle(title, isError)
-        setupMessage(message)
-        setupButton(isError)
+        titleLabel.text = title
+        titleLabel.textColor = isError ? .systemRed : .systemPurple
+        messageLabel.text = message
+        
+        configureAnimation(named: icon)
+        configureButton(isError: isError)
+        
+        buildHierarchy()
         setupLayout()
         animateIn()
     }
     
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    
-    // MARK: - Component builders
-    private func setupDimBackground() {
-        dimBackground.backgroundColor = UIColor.black.withAlphaComponent(0.2)
-        dimBackground.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(dimBackground)
-        NSLayoutConstraint.activate([
-            dimBackground.topAnchor.constraint(equalTo: topAnchor),
-            dimBackground.bottomAnchor.constraint(equalTo: bottomAnchor),
-            dimBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
-            dimBackground.trailingAnchor.constraint(equalTo: trailingAnchor)
-        ])
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
+
+    // MARK: - Configuration
     
-    private func setupAlertBox() {
-        alertBox.translatesAutoresizingMaskIntoConstraints = false
-        alertBox.backgroundColor = .white
-        alertBox.layer.cornerRadius = 20
-        alertBox.alpha = 0
-        alertBox.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        addSubview(alertBox)
-    }
-    
-    private func setupBadge(with icon: String) {
+    private func configureAnimation(named icon: String) {
         guard
             let url = Bundle.main.url(forResource: icon, withExtension: "json"),
             let animation = LottieAnimation.filepath(url.path)
         else {
-            assertionFailure("Could not load resource")
+            assertionFailure("Could not load resource: \(icon)")
             return
         }
-
-        badgeAnimationView.animation          = animation
-        badgeAnimationView.translatesAutoresizingMaskIntoConstraints = false
-        badgeAnimationView.contentMode        = .scaleAspectFit
-        badgeAnimationView.loopMode           = .loop
-        badgeAnimationView.backgroundBehavior = .pauseAndRestore
-        badgeAnimationView.alpha              = 0
-        badgeAnimationView.transform          = CGAffineTransform(scaleX: 0.8, y: 0.8)
-
-        addSubview(badgeAnimationView)
+        badgeAnimationView.animation = animation
     }
     
-    private func setupTitle(_ text: String, _ isError: Bool) {
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = text
-        titleLabel.font = UIFont(name: Fonts.MontserratSemiBold, size: 18) ?? .boldSystemFont(ofSize: 18)
-        titleLabel.textColor = isError ? .systemRed : .systemPurple
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 0
-        alertBox.addSubview(titleLabel)
-    }
-    
-    private func setupMessage(_ text: String) {
-        messageLabel.translatesAutoresizingMaskIntoConstraints = false
-        messageLabel.text = text
-        messageLabel.font = UIFont(name: Fonts.MontserratRegular, size: 16) ?? .systemFont(ofSize: 16)
-        messageLabel.numberOfLines = 0
-        messageLabel.textAlignment = .center
-        messageLabel.textColor = .black
-        alertBox.addSubview(messageLabel)
-    }
-    
-    private func setupButton(_ isError: Bool) {
+    private func configureButton(isError: Bool) {
+        okButton = GradientButton(
+            title: "OK",
+            leadingColor: isError ?
+                UIColor(red: 0.93, green: 0.32, blue: 0.29, alpha: 1.0).cgColor :
+                UIColor(red: 0.67, green: 0.51, blue: 0.96, alpha: 1.0).cgColor,
+            trailingColor: isError ?
+                UIColor(red: 0.73, green: 0.11, blue: 0.14, alpha: 1.0).cgColor :
+                UIColor(red: 0.44, green: 0.16, blue: 0.94, alpha: 1.0).cgColor   
+        )
         okButton.translatesAutoresizingMaskIntoConstraints = false
-        okButton.setTitle("OK", for: .normal)
-        okButton.setTitleColor(.white, for: .normal)
-        okButton.backgroundColor = isError ? .systemRed : .systemPurple
         okButton.layer.cornerRadius = 10
-        okButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        okButton.titleLabel?.font = UIFont(name: Fonts.BeachDay, size: 20) ?? .systemFont(ofSize: 20, weight: .medium)
         okButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
-        alertBox.addSubview(okButton)
+    }
+
+    // MARK: - Build View
+
+    private func buildHierarchy() {
+        addSubview(dimBackground)
+        addSubview(alertBox)
+        addSubview(badgeAnimationView)
+        
+        [titleLabel, messageLabel, okButton].forEach {
+            alertBox.contentView.addSubview($0)
+        }
     }
     
-    // MARK: - Layout
     private func setupLayout() {
         NSLayoutConstraint.activate([
+            dimBackground.topAnchor.constraint(equalTo: topAnchor),
+            dimBackground.bottomAnchor.constraint(equalTo: bottomAnchor),
+            dimBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
+            dimBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
+            
             alertBox.centerYAnchor.constraint(equalTo: centerYAnchor),
             alertBox.centerXAnchor.constraint(equalTo: centerXAnchor),
             alertBox.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.8),
             
-            // Badge overlaps top-left
             badgeAnimationView.widthAnchor.constraint(equalToConstant: 60),
             badgeAnimationView.heightAnchor.constraint(equalTo: badgeAnimationView.widthAnchor),
             badgeAnimationView.leadingAnchor.constraint(equalTo: alertBox.leadingAnchor, constant: -15),
             badgeAnimationView.topAnchor.constraint(equalTo: alertBox.topAnchor, constant: -28),
             
-            // Title / message / button
             titleLabel.topAnchor.constraint(equalTo: alertBox.topAnchor, constant: 20),
             titleLabel.leadingAnchor.constraint(equalTo: alertBox.leadingAnchor, constant: 40),
             titleLabel.trailingAnchor.constraint(equalTo: alertBox.trailingAnchor, constant: -40),
