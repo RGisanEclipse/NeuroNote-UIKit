@@ -4,3 +4,10 @@ Fastlane/test_output
 
 # Xcode build artifacts
 Build/
+
+# Xcode
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
