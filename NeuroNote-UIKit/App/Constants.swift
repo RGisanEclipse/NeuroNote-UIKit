@@ -21,6 +21,8 @@ struct Constants{
         static let angryStar = "angry-star"
         static let unsureStar = "unsure-star"
         static let thumbsUp = "birdie-success"
+        static let clouds = "clouds"
+        static let happySun = "happy-sun"
         
     }
     struct LaunchScreenConstants{
@@ -31,7 +33,7 @@ struct Constants{
     struct LoginViewControllerConstants{
         
         static let loginBGImageName = "LoginBG"
-        static let helloLabelSignInText = "Hello\nSign in!"
+        static let helloLabelSignInText = "Welcome Back!"
         static let helloLabelSignUpText = "Create Your\nAccount"
         static let toggleButtonToSignUpText = "Don't have an account? Sign up"
         static let toggleButtonToSignInText = "Already have an account? Sign in"

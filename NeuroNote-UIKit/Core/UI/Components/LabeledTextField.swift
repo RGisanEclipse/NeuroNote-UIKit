@@ -9,142 +9,141 @@ import UIKit
 
 class LabeledTextField: UIView {
     
-    private let horizontalPadding: CGFloat = 30
     private var isPasswordField: Bool = false
     private var trailingButton: UIButton?
-    // MARK: - Subviews
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.clipsToBounds = true
-        label.textColor = .systemPurple
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = UIFont(name: Fonts.MontserratRegular, size: 18)
-        return label
-    }()
+    private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialLight))
+    private let textField = UITextField()
+    private let underline = UIView()
     
-    private let textField: UITextField = {
-        let textField = UITextField()
-        textField.font = .systemFont(ofSize: 16, weight: .medium)
-        textField.textColor = .black
-        textField.font = UIFont(name: Fonts.MontserratRegular, size: 16) ?? .systemFont(ofSize: 16)
-        textField.attributedPlaceholder = NSAttributedString(
-            string: "Enter your text",
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray,
-                         NSAttributedString.Key.font: UIFont(name: Fonts.MontserratRegular, size: 16) ?? .systemFont(ofSize: 16)]
-        )
-        textField.autocapitalizationType = .none
-        textField.borderStyle = .none
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.clipsToBounds = true
-        return textField
-    }()
+    private let horizontalPadding: CGFloat = 20
+    private let verticalSpacing: CGFloat = 8
     
-    private let underlineView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .lightGray
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    private func configureTrailingButton(with image: UIImage) {
-        let button = UIButton(type: .system)
-        button.setImage(image, for: .normal)
-        button.frame           = CGRect(x: 0, y: 0, width: 24, height: 24)
-        button.tintColor       = .lightGray
-        button.addTarget(self, action: #selector(trailingButtonTapped), for: .touchUpInside)
-        textField.rightView     = button
-        textField.rightViewMode = .always
-        trailingButton          = button
-    }
-    // MARK: - Public helpers
-    public func reset() {
-        textField.text = nil
-
-        guard isPasswordField else { return }
-
-        if !textField.isSecureTextEntry {
-            textField.isSecureTextEntry = true
-        }
-        
-        trailingButton?.isSelected = false
-    }
-    // MARK: - Initializer
     init(title: String, placeholder: String, trailingImage: UIImage?) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = title
-        textField.placeholder = placeholder
-        buildHierarchy()
-        setupConstraints()
-        if let img = trailingImage {
-            configureTrailingButton(with: img)
+        
+        setupTextFieldContainer()
+        setupTextField(with: placeholder)
+        
+        if let trailing = trailingImage {
+            configureTrailingButton(with: trailing)
         }
-        if title == "Password" || title == "Confirm Password"{
+        
+        if title.lowercased().contains("password") {
             isPasswordField = true
             textField.isSecureTextEntry = true
         }
+        
+        buildHierarchy()
+        setupConstraints()
+        setupFocusBehavior()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Getter/Setter
-    
-    public func getText() -> String?{
+    // MARK: - Public
+    public func getText() -> String? {
         return textField.text
     }
     
-    // MARK: - ViewSetup
-    private func buildHierarchy() {
-        addSubview(titleLabel)
-        addSubview(textField)
-        addSubview(underlineView)
+    public func reset() {
+        textField.text = nil
+        if isPasswordField {
+            textField.isSecureTextEntry = true
+            trailingButton?.isSelected = false
+        }
     }
     
-    private var trailingAction: (() -> Void)?
+    // MARK: - Setup
+    
+    private func setupTextFieldContainer() {
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.layer.cornerRadius = 14
+        blurView.clipsToBounds = true
+    }
+    
+    private func setupTextField(with placeholder: String) {
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.font = UIFont(name: Fonts.MontserratRegular, size: 15)
+        textField.textColor = .black
+        textField.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [
+                .foregroundColor: UIColor.black,
+                .font: UIFont(name: Fonts.MontserratRegular, size: 15) ?? .systemFont(ofSize: 15)
+            ]
+        )
+        textField.borderStyle = .none
+        textField.autocapitalizationType = .none
+        
+        textField.layer.cornerRadius = 8
+        textField.clipsToBounds = true
+    }
+    
+    private func configureTrailingButton(with image: UIImage) {
+        let button = UIButton(type: .system)
+        button.setImage(image.withRenderingMode(.alwaysTemplate), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(trailingButtonTapped), for: .touchUpInside)
+        textField.rightView = button
+        textField.rightViewMode = .always
+        trailingButton = button
+    }
+    
+    private func buildHierarchy() {
+        addSubview(blurView)
+        blurView.contentView.addSubview(textField)
+    }
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // TitleLabel
-            titleLabel.topAnchor.constraint(equalTo: topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor,
-                                                constant: horizontalPadding),
-            titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor,
-                                                 constant: -horizontalPadding),
             
-            // Text field
-            textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor,
-                                           constant: 6),
-            textField.leadingAnchor.constraint(equalTo: leadingAnchor,
-                                               constant: horizontalPadding),
-            textField.trailingAnchor.constraint(equalTo: trailingAnchor,
-                                                constant: -horizontalPadding),
-            textField.widthAnchor.constraint(equalTo: widthAnchor, constant: -2 * horizontalPadding),
-            
-            // Underline
-            underlineView.topAnchor.constraint(equalTo: textField.bottomAnchor,
-                                               constant: 4),
-            underlineView.leadingAnchor.constraint(equalTo: leadingAnchor,
-                                                   constant: horizontalPadding),
-            underlineView.trailingAnchor.constraint(equalTo: trailingAnchor,
-                                                    constant: -horizontalPadding),
-            underlineView.heightAnchor.constraint(equalToConstant: 1),
-            underlineView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            // TextField Container
+            blurView.topAnchor.constraint(equalTo: topAnchor, constant: verticalSpacing),
+            blurView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: horizontalPadding),
+            blurView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -horizontalPadding),
+            blurView.heightAnchor.constraint(equalToConstant: 48),
+            blurView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            // TextField
+            textField.leadingAnchor.constraint(equalTo: blurView.leadingAnchor, constant: 12),
+            textField.trailingAnchor.constraint(equalTo: blurView.trailingAnchor, constant: -12),
+            textField.topAnchor.constraint(equalTo: blurView.topAnchor),
+            textField.bottomAnchor.constraint(equalTo: blurView.bottomAnchor)
         ])
     }
+    
+    // MARK: - Focus Styling
+    private func setupFocusBehavior() {
+        textField.addTarget(self, action: #selector(focused), for: .editingDidBegin)
+        textField.addTarget(self, action: #selector(unfocused), for: .editingDidEnd)
+    }
+    
+    @objc private func focused() {
+        UIView.animate(withDuration: 0.2) {
+            self.blurView.layer.borderColor = UIColor.white.cgColor
+        }
+    }
+    
+    @objc private func unfocused() {
+        UIView.animate(withDuration: 0.2) {
+            self.blurView.layer.borderColor = .none
+        }
+    }
+    
+    // MARK: - Password Eye Toggle
     @objc private func trailingButtonTapped() {
         guard isPasswordField else { return }
-        let iconName = textField.isSecureTextEntry ? "eye.slash" : "eye"
         textField.isSecureTextEntry.toggle()
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.trailingButton?.setImage(UIImage(systemName: iconName),
-                                          for: .normal)
-            self.textField.rightView = self.trailingButton
-        }
+        let iconName = textField.isSecureTextEntry ? "eye" : "eye.slash"
+        trailingButton?.setImage(UIImage(systemName: iconName), for: .normal)
     }
 }
 
-#Preview{
-    LabeledTextField(title: "Demo Title", placeholder: "Demo Placeholder", trailingImage: UIImage(systemName: "lock.fill"))
+#Preview {
+    LabeledTextField(title: "Password",
+                     placeholder: "Enter your password",
+                     trailingImage: UIImage(systemName: "eye"))
 }
