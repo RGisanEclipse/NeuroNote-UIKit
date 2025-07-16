@@ -23,6 +23,9 @@ struct Constants{
         static let thumbsUp = "birdie-success"
         static let clouds = "clouds"
         static let happySun = "happy-sun"
+        static let noWifi = "no-wifi"
+        static let loadingDots = "loading-dots"
+        static let nightSky = "night-sky"
         
     }
     struct LaunchScreenConstants{
@@ -42,5 +45,11 @@ struct Constants{
     
     struct KeychainHelperKeys{
         static let authToken = "auth_token"
+        static let userId    = "user_id"
+    }
+    
+    struct Tests{
+        static let validEmail = "a@b.com"
+        static let validPassword = "CoolPass1@"
     }
 }

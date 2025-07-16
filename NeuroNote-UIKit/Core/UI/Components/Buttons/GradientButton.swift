@@ -6,26 +6,75 @@
 //
 
 import UIKit
+import Lottie
 
 class GradientButton: UIButton {
-    private let gradient = CAGradientLayer()
-    var leadingColor: CGColor = UIColor.systemBlue.cgColor
-    var trailingColor: CGColor = UIColor.systemPurple.cgColor
+    
+    private let gradientLayer = CAGradientLayer()
+    private var title: String
+    private let originalColors: [CGColor]
+    private let grayColors: [CGColor] = [
+        UIColor(red: 0.90, green: 0.90, blue: 0.92, alpha: 1.0).cgColor,
+        UIColor(red: 0.90, green: 0.90, blue: 0.92, alpha: 1.0).cgColor
+    ]
+    
+    private let lottieView: LottieAnimationView = {
+        let anim = LottieAnimationView(name: Constants.animations.loadingDots)
+        anim.loopMode = .loop
+        anim.contentMode = .scaleAspectFit
+        anim.translatesAutoresizingMaskIntoConstraints = false
+        anim.isHidden = true
+        return anim
+    }()
+    
     init(title: String, leadingColor: CGColor, trailingColor: CGColor) {
+        self.title = title
+        self.originalColors = [leadingColor, trailingColor]
         super.init(frame: .zero)
-        self.leadingColor  = leadingColor
-        self.trailingColor = trailingColor
+        
+        layer.insertSublayer(gradientLayer, at: 0)
         setTitle(title, for: .normal)
         setTitleColor(.white, for: .normal)
-        titleLabel?.font = UIFont(name: Fonts.BeachDay, size: 25) ?? .systemFont(ofSize: 17, weight: .semibold)
+        titleLabel?.font = UIFont(name: Fonts.BeachDay, size: 20) ?? UIFont.boldSystemFont(ofSize: 16)
         layer.cornerRadius = 20
         clipsToBounds = true
-        gradient.colors = [self.leadingColor, self.trailingColor]
-        gradient.startPoint = CGPoint(x: 0, y: 0.5)
-        gradient.endPoint   = CGPoint(x: 1, y: 0.5)
-        layer.insertSublayer(gradient, at: 0)
+        
+        gradientLayer.colors = originalColors
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        
+        addSubview(lottieView)
+        NSLayoutConstraint.activate([
+            lottieView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            lottieView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            lottieView.heightAnchor.constraint(equalTo: heightAnchor, multiplier: 0.5),
+            lottieView.widthAnchor.constraint(equalTo: lottieView.heightAnchor)
+        ])
     }
     
-    required init?(coder: NSCoder) { fatalError() }
-    override func layoutSubviews() { super.layoutSubviews(); gradient.frame = bounds }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = bounds
+    }
+    
+    func setLoading(_ isLoading: Bool) {
+        isEnabled = !isLoading
+        if isLoading {
+            setTitle(Constants.empty, for: .normal)
+            lottieView.transform = CGAffineTransform(scaleX: 3.0, y: 3.0)
+            lottieView.isHidden = false
+            lottieView.play()
+            gradientLayer.colors = grayColors
+        } else {
+            setTitle(title, for: .normal)
+            lottieView.stop()
+            lottieView.isHidden = true
+            lottieView.transform = .identity
+            gradientLayer.colors = originalColors
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

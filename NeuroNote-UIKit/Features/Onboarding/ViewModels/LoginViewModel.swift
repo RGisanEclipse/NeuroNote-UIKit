@@ -16,14 +16,14 @@ struct AlertContent {
 
 @MainActor
 class LoginViewModel {
-
+    
     var onMessage: ((AlertContent) -> Void)?
     private let authManager: AuthManagerProtocol
-
+    
     init(authManager: AuthManagerProtocol = AuthManager.shared) {
         self.authManager = authManager
     }
-
+    
     func forgotPasswordButtonTapped(email: String) {
         onMessage?(AlertContent(
             title: "Forgot Password?",
@@ -32,7 +32,7 @@ class LoginViewModel {
             animationName: Constants.animations.unsureStar
         ))
     }
-
+    
     func signInButtonTapped(email: String,
                             password: String,
                             confirmPassword: String?,
@@ -65,30 +65,41 @@ class LoginViewModel {
                     password: password,
                     mode: mode == .signup ? .signup : .signin
                 )
-
+                
                 let alert = mode == .signup ? AuthAlert.signupSuccess
-                                            : AuthAlert.signinSuccess
+                : AuthAlert.signinSuccess
                 onMessage?(alert)
-
-            } catch {
+                
+            }
+            catch {
                 let alertContent: AlertContent
-
+                
                 if let authErr = error as? AuthError,
                    case let .server(serverMsg) = authErr {
                     let pres = serverMsg.presentation
-                    alertContent = AlertContent(title: pres.title,
-                                                message: pres.message,
-                                                shouldBeRed: pres.shouldBeRed,
-                                                animationName: pres.animationName)
-                } else {
                     alertContent = AlertContent(
-                        title: "We Dunno Either 🤷‍♂️",
-                        message: "Seems like we've hit a new error. We'll check it out",
-                        shouldBeRed: false,
-                        animationName: Constants.animations.unsureStar
+                        title: pres.title,
+                        message: pres.message,
+                        shouldBeRed: pres.shouldBeRed,
+                        animationName: pres.animationName
                     )
+                    
+                } else if let networkErr = error as? NetworkError {
+                    switch networkErr {
+                    case .noInternet:
+                        alertContent = NetworkAlert.noInternet
+                    case .timeout:
+                        alertContent = NetworkAlert.timeout
+                    case .cannotReachServer:
+                        alertContent = NetworkAlert.cannotReachServer
+                    case .generic(let msg):
+                        alertContent = NetworkAlert.generic(msg)
+                    }
+                    
+                } else {
+                    alertContent = AuthAlert.unknown
                 }
-
+                
                 onMessage?(alertContent)
             }
         }
