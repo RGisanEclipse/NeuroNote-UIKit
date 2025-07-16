@@ -13,6 +13,7 @@ enum AuthError: LocalizedError, Equatable {
     case decodingFailed
     case unexpectedError
     case noTokenReceived
+    case noUserIdReceived
     case server(AuthServerMessage)
 
     var errorDescription: String? {
@@ -21,6 +22,7 @@ enum AuthError: LocalizedError, Equatable {
         case .invalidResponse:     return "Invalid server response"
         case .decodingFailed:      return "Failed to read server data"
         case .noTokenReceived:     return "No token received"
+        case .noUserIdReceived:     return "No user id received"
         case .server(let msg):     return msg.rawValue
         case .unexpectedError:     return "Unexpected error"
         }

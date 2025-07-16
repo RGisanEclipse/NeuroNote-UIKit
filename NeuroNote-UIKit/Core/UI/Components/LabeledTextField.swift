@@ -18,7 +18,7 @@ class LabeledTextField: UIView {
     private let horizontalPadding: CGFloat = 20
     private let verticalSpacing: CGFloat = 8
     
-    init(title: String, placeholder: String, trailingImage: UIImage?) {
+    init(placeholder: String, trailingImage: UIImage?) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         
@@ -28,8 +28,10 @@ class LabeledTextField: UIView {
         if let trailing = trailingImage {
             configureTrailingButton(with: trailing)
         }
-        
-        if title.lowercased().contains("password") {
+        if placeholder.lowercased().contains("email") {
+            textField.keyboardType = .emailAddress
+        }
+        if placeholder.lowercased().contains("password") {
             isPasswordField = true
             textField.isSecureTextEntry = true
         }
@@ -72,7 +74,10 @@ class LabeledTextField: UIView {
             string: placeholder,
             attributes: [
                 .foregroundColor: UIColor.black,
-                .font: UIFont(name: Fonts.MontserratRegular, size: 15) ?? .systemFont(ofSize: 15)
+                .font: UIFont(
+                    name: Fonts.MontserratRegular,
+                    size: 15
+                ) ?? .systemFont(ofSize: 15)
             ]
         )
         textField.borderStyle = .none
@@ -87,7 +92,11 @@ class LabeledTextField: UIView {
         button.setImage(image.withRenderingMode(.alwaysTemplate), for: .normal)
         button.tintColor = .black
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(trailingButtonTapped), for: .touchUpInside)
+        button.addTarget(
+            self,
+            action: #selector(trailingButtonTapped),
+            for: .touchUpInside
+        )
         textField.rightView = button
         textField.rightViewMode = .always
         trailingButton = button
@@ -102,14 +111,29 @@ class LabeledTextField: UIView {
         NSLayoutConstraint.activate([
             
             // TextField Container
-            blurView.topAnchor.constraint(equalTo: topAnchor, constant: verticalSpacing),
-            blurView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: horizontalPadding),
-            blurView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -horizontalPadding),
+            blurView.topAnchor.constraint(
+                equalTo: topAnchor,
+                constant: verticalSpacing
+            ),
+            blurView.leadingAnchor.constraint(
+                equalTo: leadingAnchor,
+                constant: horizontalPadding
+            ),
+            blurView.trailingAnchor.constraint(
+                equalTo: trailingAnchor,
+                constant: -horizontalPadding
+            ),
             blurView.heightAnchor.constraint(equalToConstant: 48),
             blurView.bottomAnchor.constraint(equalTo: bottomAnchor),
             // TextField
-            textField.leadingAnchor.constraint(equalTo: blurView.leadingAnchor, constant: 12),
-            textField.trailingAnchor.constraint(equalTo: blurView.trailingAnchor, constant: -12),
+            textField.leadingAnchor.constraint(
+                equalTo: blurView.leadingAnchor,
+                constant: 12
+            ),
+            textField.trailingAnchor.constraint(
+                equalTo: blurView.trailingAnchor,
+                constant: -12
+            ),
             textField.topAnchor.constraint(equalTo: blurView.topAnchor),
             textField.bottomAnchor.constraint(equalTo: blurView.bottomAnchor)
         ])
@@ -117,8 +141,16 @@ class LabeledTextField: UIView {
     
     // MARK: - Focus Styling
     private func setupFocusBehavior() {
-        textField.addTarget(self, action: #selector(focused), for: .editingDidBegin)
-        textField.addTarget(self, action: #selector(unfocused), for: .editingDidEnd)
+        textField.addTarget(
+            self,
+            action: #selector(focused),
+            for: .editingDidBegin
+        )
+        textField.addTarget(
+            self,
+            action: #selector(unfocused),
+            for: .editingDidEnd
+        )
     }
     
     @objc private func focused() {
@@ -138,12 +170,16 @@ class LabeledTextField: UIView {
         guard isPasswordField else { return }
         textField.isSecureTextEntry.toggle()
         let iconName = textField.isSecureTextEntry ? "eye" : "eye.slash"
-        trailingButton?.setImage(UIImage(systemName: iconName), for: .normal)
+        trailingButton?.setImage(
+            UIImage(systemName: iconName),
+            for: .normal
+        )
     }
 }
 
 #Preview {
-    LabeledTextField(title: "Password",
+    LabeledTextField(
                      placeholder: "Enter your password",
-                     trailingImage: UIImage(systemName: "eye"))
+                     trailingImage: UIImage(systemName: "eye")
+    )
 }

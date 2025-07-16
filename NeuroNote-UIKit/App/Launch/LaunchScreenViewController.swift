@@ -62,7 +62,10 @@ class LaunchScreenViewController: UIViewController {
                        options: [.curveEaseOut],
                        animations: {
             self.logoImageView.alpha = 1
-            self.logoImageView.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+            self.logoImageView.transform = CGAffineTransform(
+                scaleX: 1.5,
+                y: 1.5
+            )
         },
             completion: { _ in
             UIView.animate(withDuration: 0.3,

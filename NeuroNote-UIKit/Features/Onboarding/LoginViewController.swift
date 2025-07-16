@@ -42,9 +42,12 @@ class LoginViewController: UIViewController {
     private let helloLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor       = .white
+        label.textColor = .white
         label.numberOfLines = 0
-        label.font            = UIFont(name: Fonts.BeachDay, size: 32) ?? .systemFont(ofSize: 32, weight: .bold)
+        label.font = UIFont(
+            name: Fonts.BeachDay,
+            size: 32
+        ) ?? .systemFont(ofSize: 32, weight: .bold)
         label.textAlignment = .center
         return label
     }()
@@ -77,29 +80,57 @@ class LoginViewController: UIViewController {
     }()
     
     // MARK: - Text Fields (unchanged component)
-    private let emailView  = LabeledTextField(title: "Email", placeholder: "Email", trailingImage: nil)
-    private let passwordView = LabeledTextField(title: "Password", placeholder: "Password", trailingImage: UIImage(systemName: "eye"))
-    private let confirmPasswordView = LabeledTextField(title: "Confirm Password", placeholder: "Re-enter password", trailingImage: UIImage(systemName: "eye"))
+    private let emailView  = LabeledTextField(
+        placeholder: "Email",
+        trailingImage: nil
+    )
+    private let passwordView = LabeledTextField(
+        placeholder: "Password",
+        trailingImage: UIImage(systemName: "eye")
+    )
+    private let confirmPasswordView = LabeledTextField(
+        placeholder: "Re-enter password",
+        trailingImage: UIImage(systemName: "eye")
+    )
     
     // MARK: - Forgot Password
     private let forgotPasswordButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Forgot Password?", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.titleLabel?.font = UIFont(name: Fonts.MontserratRegular, size: 15) ?? .systemFont(ofSize: 15)
+        button.setTitle(
+            "Forgot Password?",
+            for: .normal
+        )
+        button.setTitleColor(
+            .black,
+            for: .normal
+        )
+        button.titleLabel?.font = UIFont(
+            name: Fonts.MontserratRegular,
+            size: 15
+        ) ?? .systemFont(ofSize: 15)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     // MARK: - Gradient Sign Button
-    private let signInButton = GradientButton(title: "SIGN IN", leadingColor: UIColor.systemYellow.cgColor, trailingColor: UIColor.systemOrange.cgColor)
+    private let signInButton = GradientButton(
+        title: "SIGN IN",
+        leadingColor: UIColor.systemYellow.cgColor,
+        trailingColor: UIColor.systemOrange.cgColor
+    )
     
     // MARK: - Toggle Mode
     private let toggleModeButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(Constants.LoginViewControllerConstants.toggleButtonToSignUpText, for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.titleLabel?.font = UIFont(name: Fonts.MontserratRegular,size: 15) ?? .systemFont(ofSize: 15)
+        button.setTitleColor(
+            .black,
+            for: .normal
+        )
+        button.titleLabel?.font = UIFont(
+            name: Fonts.MontserratRegular,
+            size: 15
+        ) ?? .systemFont(ofSize: 15)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -152,9 +183,18 @@ class LoginViewController: UIViewController {
             backgroundAnimationView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             // Glass Card
-            glassCard.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            glassCard.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            glassCard.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 50),
+            glassCard.leadingAnchor.constraint(
+                equalTo: view.leadingAnchor,
+                constant: 16
+            ),
+            glassCard.trailingAnchor.constraint(
+                equalTo: view.trailingAnchor,
+                constant: -16
+            ),
+            glassCard.centerYAnchor.constraint(
+                equalTo: view.centerYAnchor,
+                constant: 50
+            ),
             
             // Scroll View constraints (to fill glassCard's content view)
             scrollView.topAnchor.constraint(equalTo: glassCard.contentView.topAnchor),
@@ -170,8 +210,7 @@ class LoginViewController: UIViewController {
             contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor), // Essential for vertical scrolling
         ])
             
-        // Dynamic height multiplier
-        cardHeightConstraint = glassCard.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.60)
+        cardHeightConstraint = glassCard.heightAnchor.constraint(equalToConstant: 370)
         cardHeightConstraint.isActive = true
             
         // Fields & buttons inside content view
@@ -183,58 +222,108 @@ class LoginViewController: UIViewController {
         NSLayoutConstraint.activate([
             // Sun AnimationView
             sunAnimationView.widthAnchor.constraint(equalToConstant: 150),
-            sunAnimationView.heightAnchor.constraint(equalTo: glassCard.widthAnchor),
-            sunAnimationView.leadingAnchor.constraint(equalTo: glassCard.leadingAnchor, constant: view.frame.width/3 - 30),
-            sunAnimationView.bottomAnchor.constraint(equalTo: glassCard.topAnchor, constant: 100),
+            sunAnimationView.heightAnchor.constraint(
+                equalTo: glassCard.widthAnchor
+            ),
+            sunAnimationView.leadingAnchor.constraint(
+                equalTo: glassCard.leadingAnchor,
+                constant: view.frame.width/3 - 30
+            ),
+            sunAnimationView.bottomAnchor.constraint(
+                equalTo: glassCard.topAnchor,
+                constant: 100
+            ),
                 
-            helloLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15),
-            helloLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 0),
-            helloLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 0),
+            helloLabel.topAnchor.constraint(
+                equalTo: contentView.topAnchor,
+                constant: 15
+            ),
+            helloLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 0
+            ),
+            helloLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: 0
+            ),
                 
-            emailView.topAnchor.constraint(equalTo: helloLabel.bottomAnchor, constant: 10),
-            emailView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            emailView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
+            emailView.topAnchor.constraint(
+                equalTo: helloLabel.bottomAnchor,
+                constant: 10
+            ),
+            emailView.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 24
+            ),
+            emailView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -24
+            ),
                 
-            passwordView.topAnchor.constraint(equalTo: emailView.bottomAnchor, constant: 10),
+            passwordView.topAnchor.constraint(
+                equalTo: emailView.bottomAnchor,
+                constant: 10
+            ),
             passwordView.leadingAnchor.constraint(equalTo: emailView.leadingAnchor),
             passwordView.trailingAnchor.constraint(equalTo: emailView.trailingAnchor),
                 
-            forgotPasswordButton.trailingAnchor.constraint(equalTo: emailView.trailingAnchor, constant: -4)
+            forgotPasswordButton.trailingAnchor.constraint(
+                equalTo: emailView.trailingAnchor,
+                constant: -4
+            )
         ])
             
-        forgotPasswordTopConstraint = forgotPasswordButton.topAnchor.constraint(equalTo: passwordView.bottomAnchor, constant: 20)
+        forgotPasswordTopConstraint = forgotPasswordButton.topAnchor.constraint(
+            equalTo: passwordView.bottomAnchor,
+            constant: 20
+        )
         forgotPasswordTopConstraint?.isActive = true
             
         // Sign button
         NSLayoutConstraint.activate([
             signInButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            signInButton.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.7),
+            signInButton.widthAnchor.constraint(
+                equalTo: contentView.widthAnchor,
+                multiplier: 0.7
+            ),
             signInButton.heightAnchor.constraint(equalToConstant: 52)
         ])
-        signButtonTopToForgot = signInButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 20)
+        signButtonTopToForgot = signInButton.topAnchor.constraint(
+            equalTo: forgotPasswordButton.bottomAnchor,
+            constant: 20
+        )
         signButtonTopToForgot?.isActive = true
             
         // Toggle
         NSLayoutConstraint.activate([
-            toggleModeButton.topAnchor.constraint(equalTo: signInButton.bottomAnchor, constant: 12),
+            toggleModeButton.topAnchor.constraint(
+                equalTo: signInButton.bottomAnchor,
+                constant: 12
+            ),
             toggleModeButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            toggleModeButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+            toggleModeButton.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor,
+                constant: -20
+            )
         ])
     }
     
     // MARK: - UI Mode Switch
     private func updateUIForMode(animated: Bool) {
-        let multiplier: CGFloat = mode == .login ? 0.47 : 0.54
+        let newConstant: CGFloat = (mode == .login) ? 370 : 420
         let updates = {
             self.view.removeConstraint(self.cardHeightConstraint)
-            self.cardHeightConstraint = self.glassCard.heightAnchor.constraint(equalTo: self.view.heightAnchor, multiplier: multiplier)
+            self.cardHeightConstraint.constant = newConstant
             self.cardHeightConstraint.isActive = true
                 
             switch self.mode {
             case .login:
                 self.helloLabel.text = Constants.LoginViewControllerConstants.helloLabelSignInText
                 self.signInButton.setTitle("SIGN IN", for: .normal)
-                self.toggleModeButton.setTitle(Constants.LoginViewControllerConstants.toggleButtonToSignUpText, for: .normal)
+                self.toggleModeButton.setTitle(
+                    Constants.LoginViewControllerConstants.toggleButtonToSignUpText,
+                    for: .normal
+                )
                     
                 self.confirmPasswordView.removeFromSuperview()
                 NSLayoutConstraint.deactivate(self.confirmConstraints)
@@ -247,22 +336,31 @@ class LoginViewController: UIViewController {
             case .signup:
                 self.helloLabel.text = Constants.LoginViewControllerConstants.helloLabelSignUpText
                 self.signInButton.setTitle("SIGN UP", for: .normal)
-                self.toggleModeButton.setTitle(Constants.LoginViewControllerConstants.toggleButtonToSignInText, for: .normal)
+                self.toggleModeButton.setTitle(
+                    Constants.LoginViewControllerConstants.toggleButtonToSignInText,
+                    for: .normal
+                )
                     
                 if self.confirmPasswordView.superview == nil {
                     self.confirmPasswordView.translatesAutoresizingMaskIntoConstraints = false
                     self.contentView.addSubview(self.confirmPasswordView) // Add to content view
                     self.confirmConstraints = [
-                        self.confirmPasswordView.topAnchor.constraint(equalTo: self.passwordView.bottomAnchor, constant: 10),
-                        self.confirmPasswordView.leadingAnchor.constraint(equalTo: self.passwordView.leadingAnchor),
-                        self.confirmPasswordView.trailingAnchor.constraint(equalTo: self.passwordView.trailingAnchor)
+                        self.confirmPasswordView.topAnchor.constraint(
+                            equalTo: self.passwordView.bottomAnchor, constant: 10),
+                        self.confirmPasswordView.leadingAnchor.constraint(
+                            equalTo: self.passwordView.leadingAnchor),
+                        self.confirmPasswordView.trailingAnchor.constraint(
+                            equalTo: self.passwordView.trailingAnchor)
                     ]
                     NSLayoutConstraint.activate(self.confirmConstraints)
                 }
                 self.forgotPasswordButton.isHidden = true
                 self.signButtonTopToForgot?.isActive = false
                 if self.signButtonTopToConfirm == nil {
-                    self.signButtonTopToConfirm = self.signInButton.topAnchor.constraint(equalTo: self.confirmPasswordView.bottomAnchor, constant: 26)
+                    self.signButtonTopToConfirm = self.signInButton.topAnchor.constraint(
+                        equalTo: self.confirmPasswordView.bottomAnchor,
+                        constant: 26
+                    )
                 }
                 self.signButtonTopToConfirm?.isActive = true
             }
@@ -271,26 +369,51 @@ class LoginViewController: UIViewController {
             self.scrollView.layoutIfNeeded()
         }
             
-        animated ? UIView.transition(with: glassCard, duration: 0.25, options: .transitionCrossDissolve, animations: updates) : updates()
+        animated ? UIView.transition(
+            with: glassCard,
+            duration: 0.25,
+            options: .transitionCrossDissolve,
+            animations: updates
+        ) : updates()
     }
     
     // MARK: - Button Targets
     private func setupButtonTargets() {
-        forgotPasswordButton.addTarget(self, action: #selector(forgotPasswordTapped), for: .touchUpInside)
-        signInButton.addTarget(self, action: #selector(authTapped), for: .touchUpInside)
-        toggleModeButton.addTarget(self, action: #selector(toggleModeTapped), for: .touchUpInside)
+        forgotPasswordButton.addTarget(
+            self,
+           action: #selector(forgotPasswordTapped),
+           for: .touchUpInside
+        )
+        signInButton.addTarget(
+            self,
+            action: #selector(authTapped),
+            for: .touchUpInside
+        )
+        toggleModeButton.addTarget(
+            self,
+            action: #selector(toggleModeTapped),
+            for: .touchUpInside
+        )
     }
     
     // MARK: - Actions
     @objc private func forgotPasswordTapped() {
-        viewModel.forgotPasswordButtonTapped(email: emailView.getText() ?? "")
+        viewModel.forgotPasswordButtonTapped(email: emailView.getText() ?? Constants.empty)
     }
     
     @objc private func authTapped() {
-        let email = emailView.getText() ?? ""
-        let pw    = passwordView.getText() ?? ""
-        let confirm = mode == .signup ? (confirmPasswordView.getText() ?? "") : nil
-        viewModel.signInButtonTapped(email: email, password: pw, confirmPassword: confirm, mode: mode)
+        let email = emailView.getText() ?? Constants.empty
+        let pw    = passwordView.getText() ?? Constants.empty
+        let confirm = mode == .signup ? (confirmPasswordView.getText() ?? Constants.empty) : nil
+
+        signInButton.setLoading(true)
+
+        viewModel.signInButtonTapped(
+            email: email,
+            password: pw,
+            confirmPassword: confirm,
+            mode: mode
+        )
     }
     
     @objc private func toggleModeTapped() {
@@ -302,9 +425,15 @@ class LoginViewController: UIViewController {
             self.glassCard.alpha = 0.3
         }) { _ in
             self.mode = self.mode == .login ? .signup : .login
-            [self.emailView, self.passwordView, self.confirmPasswordView].forEach { $0.reset() }
+            [self.emailView,
+             self.passwordView,
+             self.confirmPasswordView
+            ].forEach { $0.reset() }
             self.glassCard.layoutIfNeeded()
-            UIView.animate(withDuration: 0.45, delay: 0.05, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.4) {
+            UIView.animate(withDuration: 0.45,
+                           delay: 0.05,
+                           usingSpringWithDamping: 0.8,
+                           initialSpringVelocity: 0.4) {
                 self.glassCard.transform = .identity
                 self.glassCard.alpha = 1
                 self.sunAnimationView.transform = .identity
@@ -318,6 +447,7 @@ class LoginViewController: UIViewController {
     private func setupViewModelBindings() {
         viewModel.onMessage = { [weak self] alert in
             guard let self = self else { return }
+            self.signInButton.setLoading(false)
             let banner = OkAlertView(title: alert.title, message: alert.message, isError: alert.shouldBeRed, icon: alert.animationName)
             banner.translatesAutoresizingMaskIntoConstraints = false
             self.view.addSubview(banner)

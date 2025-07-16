@@ -30,7 +30,12 @@ final class LoginViewModelTests: XCTestCase {
 
         viewModel.onMessage = { alert = $0 }
 
-        viewModel.signInButtonTapped(email: "", password: "", confirmPassword: nil, mode: .login)
+        viewModel.signInButtonTapped(
+            email: Constants.empty,
+            password: Constants.empty,
+            confirmPassword: nil,
+            mode: .login
+        )
 
         XCTAssertEqual(alert?.title, AuthAlert.fieldsMissing.title)
     }
@@ -41,7 +46,12 @@ final class LoginViewModelTests: XCTestCase {
 
         viewModel.onMessage = { alert = $0 }
 
-        viewModel.signInButtonTapped(email: "a@b.com", password: "123", confirmPassword: "456", mode: .signup)
+        viewModel.signInButtonTapped(
+            email: Constants.Tests.validEmail,
+            password: "123",
+            confirmPassword: "456",
+            mode: .signup
+        )
 
         XCTAssertEqual(alert?.title, AuthAlert.passwordMismatch.title)
     }
@@ -91,7 +101,7 @@ final class LoginViewModelTests: XCTestCase {
         )
 
         wait(for: [expectation], timeout: 1)
-        XCTAssertEqual(alert?.title, "Our Bad 😓")
+        XCTAssertEqual(alert?.title, AuthAlert.internalServerError.title)
     }
     
     @MainActor
@@ -117,7 +127,7 @@ final class LoginViewModelTests: XCTestCase {
         )
 
         wait(for: [expectation], timeout: 1)
-        XCTAssertEqual(alert?.title, "We Dunno Either 🤷‍♂️")
+        XCTAssertEqual(alert?.title, AuthAlert.unknown.title)
     }
     
     @MainActor func testSignUpFailsIfConfirmPasswordIsNil() {
@@ -127,7 +137,12 @@ final class LoginViewModelTests: XCTestCase {
 
         viewModel.onMessage = { alert = $0 }
 
-        viewModel.signInButtonTapped(email: "a@b.com", password: "123", confirmPassword: nil, mode: .signup)
+        viewModel.signInButtonTapped(
+            email: Constants.Tests.validEmail,
+            password: "123",
+            confirmPassword: nil,
+            mode: .signup
+        )
 
         XCTAssertEqual(alert?.title, AuthAlert.passwordMismatch.title)
     }
