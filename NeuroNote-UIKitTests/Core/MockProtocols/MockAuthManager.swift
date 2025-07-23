@@ -14,7 +14,7 @@ class MockAuthManager: AuthManagerProtocol {
     var shouldThrowUnknownError = false
     var serverMessageToThrow: AuthServerMessage = .internalServerError
     
-    func authenticate(email: String, password: String, mode: AuthManager.Mode) async throws -> String {
+    func authenticate(email: String, password: String, mode: AuthManager.Mode) async throws -> AuthSession {
         if shouldThrowServerError {
             throw AuthError.server(serverMessageToThrow)
         }
@@ -23,6 +23,6 @@ class MockAuthManager: AuthManagerProtocol {
             throw NSError(domain: "Test", code: -1, userInfo: nil)
         }
         
-        return "mock_user_token_123"
+        return AuthSession(token: "mock_user_token_123", userId: "random_user_id", isVerified: true)
     }
 }

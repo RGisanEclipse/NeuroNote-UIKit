@@ -42,9 +42,14 @@
 				"Core/UI/LottieAnimations/birdie-success.json",
 				Core/UI/LottieAnimations/clouds.json,
 				"Core/UI/LottieAnimations/happy-sun.json",
+				Core/UI/LottieAnimations/jetpack.json,
 				"Core/UI/LottieAnimations/loading-dots.json",
+				"Core/UI/LottieAnimations/lock-success.json",
 				"Core/UI/LottieAnimations/night-sky.json",
 				"Core/UI/LottieAnimations/no-wifi.json",
+				"Core/UI/LottieAnimations/otp-chair.json",
+				Core/UI/LottieAnimations/plane.json,
+				"Core/UI/LottieAnimations/rotating-moon.json",
 				"Core/UI/LottieAnimations/unsure-star.json",
 			);
 			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;

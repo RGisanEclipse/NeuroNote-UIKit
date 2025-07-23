@@ -18,19 +18,21 @@ struct AlertContent {
 class LoginViewModel {
     
     var onMessage: ((AlertContent) -> Void)?
+    var onAsyncStart: (() -> Void)?
+    var onSuccess: (() -> Void)?
+    var onOTPRequired: (() -> Void)?
+    
     private let authManager: AuthManagerProtocol
-    
-    init(authManager: AuthManagerProtocol = AuthManager.shared) {
+    private let otpManager: OTPManagerProtocol
+    init(
+        authManager: AuthManagerProtocol = AuthManager.shared,
+        otpManager: OTPManagerProtocol = OTPManager.shared
+    ) {
         self.authManager = authManager
+        self.otpManager = otpManager
     }
-    
     func forgotPasswordButtonTapped(email: String) {
-        onMessage?(AlertContent(
-            title: "Forgot Password?",
-            message: "Don't worry, we've got you!",
-            shouldBeRed: false,
-            animationName: Constants.animations.unsureStar
-        ))
+        onMessage?(AuthAlert.forgotPassword)
     }
     
     func signInButtonTapped(email: String,
@@ -48,28 +50,43 @@ class LoginViewModel {
             return
         }
         
-        if mode == .signup, password != confirmPassword {
-            onMessage?(AuthAlert.passwordMismatch)
-            return
+        if mode == .signup {
+            if password != confirmPassword {
+                onMessage?(AuthAlert.passwordMismatch)
+                return
+            }
+            
+            if let validationError = PasswordValidator.validate(password, email: email) {
+                onMessage?(validationError)
+                return
+            }
         }
         
-        if mode == .signup, let validationError = PasswordValidator.validate(password, email: email) {
-            onMessage?(validationError)
-            return
-        }
-        
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
+            onAsyncStart?()
             do {
-                _ = try await authManager.authenticate(
+                let session = try await authManager.authenticate(
                     email: email,
                     password: password,
                     mode: mode == .signup ? .signup : .signin
                 )
                 
-                let alert = mode == .signup ? AuthAlert.signupSuccess
-                : AuthAlert.signinSuccess
-                onMessage?(alert)
-                
+                if session.isVerified {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.onSuccess?()
+                    }
+                } else {
+                    let otpResponse = try await otpManager.requestOTP()
+                    
+                    if otpResponse.success {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            self.onOTPRequired?()
+                        }
+                    } else {
+                        throw OTPError.invalidResponse
+                    }
+                }
             }
             catch {
                 let alertContent: AlertContent
@@ -83,8 +100,17 @@ class LoginViewModel {
                         shouldBeRed: pres.shouldBeRed,
                         animationName: pres.animationName
                     )
-                    
-                } else if let networkErr = error as? NetworkError {
+                } else if let otpErr = error as? OTPError,
+                          case .serverError(let msg) = otpErr{
+                    let pres = msg.presentation
+                    alertContent = AlertContent(
+                        title: pres.title,
+                        message: pres.message,
+                        shouldBeRed: pres.shouldBeRed,
+                        animationName: pres.animationName
+                    )
+                }
+                else if let networkErr = error as? NetworkError {
                     switch networkErr {
                     case .noInternet:
                         alertContent = NetworkAlert.noInternet
@@ -95,12 +121,13 @@ class LoginViewModel {
                     case .generic(let msg):
                         alertContent = NetworkAlert.generic(msg)
                     }
-                    
                 } else {
                     alertContent = AuthAlert.unknown
                 }
                 
-                onMessage?(alertContent)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.onMessage?(alertContent)
+                }
             }
         }
     }

@@ -12,8 +12,10 @@ class MockNetworkSession: NetworkSession {
     var nextData: Data?
     var nextResponse: URLResponse?
     var shouldThrowError = false
+    var lastRequest: URLRequest?
 
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        lastRequest = request 
         if shouldThrowError {
             throw URLError(.badServerResponse)
         }

@@ -90,7 +90,7 @@ class LabeledTextField: UIView {
     private func configureTrailingButton(with image: UIImage) {
         let button = UIButton(type: .system)
         button.setImage(image.withRenderingMode(.alwaysTemplate), for: .normal)
-        button.tintColor = .black
+        button.tintColor = .label
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(
             self,

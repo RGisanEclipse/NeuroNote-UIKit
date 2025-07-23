@@ -58,7 +58,7 @@ class OkAlertView: UIView {
         label.font = UIFont(name: Fonts.MontserratRegular, size: 16) ?? .systemFont(ofSize: 16)
         label.numberOfLines = 0
         label.textAlignment = .center
-        label.textColor = .black
+        label.textColor = .label
         return label
     }()
     

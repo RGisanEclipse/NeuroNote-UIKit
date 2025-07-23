@@ -48,3 +48,16 @@ class KeychainHelper {
         SecItemDelete(query as CFDictionary)
     }
 }
+
+extension KeychainHelper: UserIDStore {
+    func getUserID() -> String? {
+        return read(forKey: "userId")
+    }
+}
+
+extension KeychainHelper {
+    func clearTestKeys() {
+        delete(forKey: Constants.KeychainHelperKeys.authToken)
+        delete(forKey: Constants.KeychainHelperKeys.userId)
+    }
+}

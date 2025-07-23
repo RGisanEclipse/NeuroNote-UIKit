@@ -32,7 +32,7 @@ extension AuthServerMessage {
         case .internalServerError:   return AuthAlert.internalServerError
         case .unauthorized:          return AuthAlert.unauthorized
         case .invalidRequestBody:    return AuthAlert.invalidRequestBody
-        case .tooManyRequests:       return AuthAlert.tooManyRequests
+        case .tooManyRequests:       return NetworkAlert.tooManyRequests
         case .unknown:               return AuthAlert.unknown
         }
     }
