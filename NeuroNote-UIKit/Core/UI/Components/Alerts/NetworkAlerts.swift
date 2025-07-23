@@ -37,4 +37,10 @@ enum NetworkAlert {
             animationName: Constants.animations.unsureStar
         )
     }
+    static let tooManyRequests = AlertContent(
+        title: "Chill 😮‍💨",
+        message: "You're going too fast. Slow down a bit.",
+        shouldBeRed: true,
+        animationName: Constants.animations.angryStar
+    )
 }

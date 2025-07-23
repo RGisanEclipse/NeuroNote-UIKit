@@ -7,17 +7,12 @@
 
 import Foundation
 
-protocol NetworkSession {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
-}
-
-extension URLSession: NetworkSession {}
-
 protocol AuthManagerProtocol {
-    func authenticate(email: String,
-                      password: String,
-                      mode: AuthManager.Mode
-    ) async throws -> String
+    func authenticate(
+        email: String,
+        password: String,
+        mode: AuthManager.Mode
+    ) async throws -> AuthSession
 }
 
 class AuthManager: AuthManagerProtocol {
@@ -43,7 +38,7 @@ class AuthManager: AuthManagerProtocol {
     }
     
     @discardableResult
-    func authenticate(email: String, password: String, mode: Mode) async throws -> String {
+    func authenticate(email: String, password: String, mode: Mode) async throws -> AuthSession {
         guard let url = URL(string: Routes.base + mode.path) else {
             throw AuthError.badURL
         }
@@ -82,14 +77,21 @@ class AuthManager: AuthManagerProtocol {
             guard let token = parsed.token else {
                 throw AuthError.noTokenReceived
             }
-            
-            guard let userId = parsed.userId else{
+            guard let userId = AuthTokenDecoder.standard.decodeJWT(token: token)?.userId else{
                 throw AuthError.noUserIdReceived
+            }
+            
+            guard let isVerified = parsed.isVerified else{
+                throw AuthError.userNotVerified
             }
             
             saveUserId(userId)
             saveToken(token)
-            return token
+            return AuthSession(
+                token: token,
+                userId: userId,
+                isVerified: isVerified
+            )
             
         } catch let error as URLError {
             switch error.code {

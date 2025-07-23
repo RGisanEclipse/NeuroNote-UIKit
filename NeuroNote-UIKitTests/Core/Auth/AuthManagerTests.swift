@@ -30,15 +30,26 @@ final class AuthManagerTests: XCTestCase {
                         httpVersion: nil,
                         headerFields: nil)!
     }
+    private func makeMockJWT(userId: String) -> String {
+        let payloadDict = ["user_id": userId]
+        let jsonData = try! JSONSerialization.data(withJSONObject: payloadDict, options: [])
+        var base64 = jsonData.base64EncodedString()
+        base64 = base64
+            .replacingOccurrences(of: "=", with: "")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+        return "header.\(base64).signature"
+    }
     
     // MARK: - Happy-AuthCase test
     func testAuthenticateReturnsTokenOnSuccess() async {
         let mock = MockNetworkSession()
+        let token = makeMockJWT(userId: Constants.Tests.userId)
         let response = AuthResponse(
             success: true,
             message: "ok",
-            token: "testToken123",
-            userId: "user123"
+            token: token,
+            isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
         mock.mockResponse = makeHTTP200Response()
@@ -46,14 +57,42 @@ final class AuthManagerTests: XCTestCase {
         let manager = AuthManager(session: mock)
         
         do {
-            let token = try await manager.authenticate(
+            let session = try await manager.authenticate(
                 email: Constants.Tests.validEmail,
                 password: Constants.Tests.validPassword,
                 mode: .signin
             )
-            XCTAssertEqual(token, "testToken123")
-            XCTAssertEqual(manager.currentToken(), "testToken123")
-            XCTAssertEqual(manager.currentUser(), "user123")
+            XCTAssertEqual(session.token, token)
+            XCTAssertEqual(manager.currentToken(), token)
+            XCTAssertEqual(manager.currentUser(), Constants.Tests.userId)
+        } catch {
+            XCTFail("Expected success but got error: \(error)")
+        }
+    }
+    
+    func testAuthenticateReturnsUnverifiedUserCorrectly() async {
+        let mock = MockNetworkSession()
+        let token = makeMockJWT(userId: Constants.Tests.userId)
+        let response = AuthResponse(
+            success: true,
+            message: "ok",
+            token: token,
+            isVerified: false
+        )
+        mock.mockData = try? JSONEncoder().encode(response)
+        mock.mockResponse = makeHTTP200Response()
+        
+        let manager = AuthManager(session: mock)
+        
+        do {
+            let session = try await manager.authenticate(
+                email: Constants.Tests.validEmail,
+                password: Constants.Tests.validPassword,
+                mode: .signin
+            )
+            XCTAssertEqual(session.token, token)
+            XCTAssertEqual(session.userId, Constants.Tests.userId)
+            XCTAssertFalse(session.isVerified)
         } catch {
             XCTFail("Expected success but got error: \(error)")
         }
@@ -96,7 +135,7 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: nil,
-            userId: "123445"
+            isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
         mock.mockResponse = makeHTTP200Response()
@@ -117,7 +156,7 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: "demotoken",
-            userId: nil
+            isVerified: false
         )
         mock.mockData = try? JSONEncoder().encode(response)
         mock.mockResponse = makeHTTP200Response()
@@ -162,8 +201,8 @@ final class AuthManagerTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
-               password: Constants.Tests.validPassword,
-               mode: .signin
+                password: Constants.Tests.validPassword,
+                mode: .signin
             )
         ) { error in
             XCTAssertEqual(error as? NetworkError, .noInternet)
@@ -178,8 +217,8 @@ final class AuthManagerTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
-               password: Constants.Tests.validPassword,
-               mode: .signin
+                password: Constants.Tests.validPassword,
+                mode: .signin
             )
         ) { error in
             XCTAssertEqual(error as? NetworkError, .cannotReachServer)
@@ -194,8 +233,8 @@ final class AuthManagerTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
-               password: Constants.Tests.validPassword,
-               mode: .signin
+                password: Constants.Tests.validPassword,
+                mode: .signin
             )
         ) { error in
             XCTAssertEqual(error as? NetworkError, .cannotReachServer)

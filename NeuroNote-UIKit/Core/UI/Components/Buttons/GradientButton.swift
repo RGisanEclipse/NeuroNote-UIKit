@@ -11,7 +11,7 @@ import Lottie
 class GradientButton: UIButton {
     
     private let gradientLayer = CAGradientLayer()
-    private var title: String
+    private var cachedTitle: String?
     private let originalColors: [CGColor]
     private let grayColors: [CGColor] = [
         UIColor(red: 0.90, green: 0.90, blue: 0.92, alpha: 1.0).cgColor,
@@ -28,14 +28,16 @@ class GradientButton: UIButton {
     }()
     
     init(title: String, leadingColor: CGColor, trailingColor: CGColor) {
-        self.title = title
         self.originalColors = [leadingColor, trailingColor]
         super.init(frame: .zero)
         
         layer.insertSublayer(gradientLayer, at: 0)
         setTitle(title, for: .normal)
         setTitleColor(.white, for: .normal)
-        titleLabel?.font = UIFont(name: Fonts.BeachDay, size: 20) ?? UIFont.boldSystemFont(ofSize: 16)
+        titleLabel?.font = UIFont(
+            name: Fonts.BeachDay,
+            size: 20
+        ) ?? UIFont.boldSystemFont(ofSize: 16)
         layer.cornerRadius = 20
         clipsToBounds = true
         
@@ -47,7 +49,10 @@ class GradientButton: UIButton {
         NSLayoutConstraint.activate([
             lottieView.centerXAnchor.constraint(equalTo: centerXAnchor),
             lottieView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            lottieView.heightAnchor.constraint(equalTo: heightAnchor, multiplier: 0.5),
+            lottieView.heightAnchor.constraint(
+                equalTo: heightAnchor,
+                multiplier: 0.5
+            ),
             lottieView.widthAnchor.constraint(equalTo: lottieView.heightAnchor)
         ])
     }
@@ -66,7 +71,6 @@ class GradientButton: UIButton {
             lottieView.play()
             gradientLayer.colors = grayColors
         } else {
-            setTitle(title, for: .normal)
             lottieView.stop()
             lottieView.isHidden = true
             lottieView.transform = .identity
