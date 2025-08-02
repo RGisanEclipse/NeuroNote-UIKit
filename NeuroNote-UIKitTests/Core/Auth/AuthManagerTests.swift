@@ -49,6 +49,7 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: token,
+            refreshToken: token,
             isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
@@ -77,6 +78,7 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: token,
+            refreshToken: token,
             isVerified: false
         )
         mock.mockData = try? JSONEncoder().encode(response)
@@ -91,7 +93,6 @@ final class AuthManagerTests: XCTestCase {
                 mode: .signin
             )
             XCTAssertEqual(session.token, token)
-            XCTAssertEqual(session.userId, Constants.Tests.userId)
             XCTAssertFalse(session.isVerified)
         } catch {
             XCTFail("Expected success but got error: \(error)")
@@ -135,6 +136,7 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: nil,
+            refreshToken: nil,
             isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
@@ -155,7 +157,8 @@ final class AuthManagerTests: XCTestCase {
         let response = AuthResponse(
             success: true,
             message: "ok",
-            token: "demotoken",
+            token: Constants.Tests.token,
+            refreshToken: Constants.Tests.token,
             isVerified: false
         )
         mock.mockData = try? JSONEncoder().encode(response)

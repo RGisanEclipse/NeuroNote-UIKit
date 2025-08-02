@@ -74,7 +74,7 @@ class AuthManager: AuthManagerProtocol {
                 throw AuthError.server(serverMsg)
             }
             
-            guard let token = parsed.token else {
+            guard let token = parsed.token, let refreshToken = parsed.refreshToken else {
                 throw AuthError.noTokenReceived
             }
             guard let userId = AuthTokenDecoder.standard.decodeJWT(token: token)?.userId else{
@@ -87,9 +87,10 @@ class AuthManager: AuthManagerProtocol {
             
             saveUserId(userId)
             saveToken(token)
+            saveRefreshToken(refreshToken)
             return AuthSession(
                 token: token,
-                userId: userId,
+                refreshToken: refreshToken,
                 isVerified: isVerified
             )
             
@@ -134,7 +135,9 @@ class AuthManager: AuthManagerProtocol {
     private func saveToken(_ token: String) {
         KeychainHelper.standard.save(token, forKey: Constants.KeychainHelperKeys.authToken)
     }
-    
+    private func saveRefreshToken(_ token: String){
+        KeychainHelper.standard.save(token, forKey: Constants.KeychainHelperKeys.refreshToken)
+    }
     private func saveUserId(_ userId: String) {
         KeychainHelper.standard.save(userId, forKey: Constants.KeychainHelperKeys.userId)
     }
