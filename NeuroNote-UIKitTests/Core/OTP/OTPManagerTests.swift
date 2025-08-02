@@ -17,6 +17,7 @@ final class OTPManagerTests: XCTestCase {
     
     func testRequestOTPSuccess() async throws {
         let mockSession = MockNetworkSession()
+        let mockAuthService = MockAuthNetworkService(session: mockSession)
         let response = OTPResponse(success: true, errorMessage: nil)
         mockSession.nextData = try JSONEncoder().encode(response)
         mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
@@ -24,13 +25,14 @@ final class OTPManagerTests: XCTestCase {
                                                    httpVersion: nil,
                                                    headerFields: nil)
 
-        let manager = OTPManager(session: mockSession)
+        let manager = OTPManager(networkService: mockAuthService)
         let result = try await manager.requestOTP()
         XCTAssertTrue(result.success)
     }
 
     func testRequestOTPFailureWithInvalidEmail() async throws {
         let mockSession = MockNetworkSession()
+        let mockAuthService = MockAuthNetworkService(session: mockSession)
         let failureResponse = OTPResponse(success: false, errorMessage: "invalid email")
         mockSession.nextData = try JSONEncoder().encode(failureResponse)
         mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
@@ -38,7 +40,7 @@ final class OTPManagerTests: XCTestCase {
                                                    httpVersion: nil,
                                                    headerFields: nil)
 
-        let manager = OTPManager(session: mockSession)
+        let manager = OTPManager(networkService: mockAuthService)
 
         do {
             _ = try await manager.requestOTP()
@@ -57,10 +59,11 @@ final class OTPManagerTests: XCTestCase {
     
     func testRequestOTPFailureWithURLError() async {
         let mockSession = MockNetworkSession()
+        let mockAuthService = MockAuthNetworkService(session: mockSession)
         mockSession.shouldThrowError = true
 
-        let manager = OTPManager(session: mockSession)
-
+        let manager = OTPManager(networkService: mockAuthService)
+        
         do {
             _ = try await manager.requestOTP()
             XCTFail("Expected error was not thrown")
@@ -78,14 +81,15 @@ final class OTPManagerTests: XCTestCase {
     
     func testVerifyOTPWithInvalidOTP() async {
         let mockSession = MockNetworkSession()
-        let failure = OTPVerifyResponse(success: false, message: "otp verification failed")
+        let mockAuthService = MockAuthNetworkService(session: mockSession)
+        let failure = OTPResponse(success: false, errorMessage: "otp verification failed")
         mockSession.nextData = try! JSONEncoder().encode(failure)
         mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
                                                    statusCode: 200,
                                                    httpVersion: nil,
                                                    headerFields: nil)
 
-        let manager = OTPManager(session: mockSession)
+        let manager = OTPManager(networkService: mockAuthService)
 
         do {
             _ = try await manager.verifyOTP(Constants.Tests.otp)
@@ -103,7 +107,8 @@ final class OTPManagerTests: XCTestCase {
     }
     func testVerifyOTPIncludesAuthHeader() async throws {
         let mockSession = MockNetworkSession()
-        let response = OTPVerifyResponse(success: true, message: nil)
+        let mockAuthService = MockAuthNetworkService(session: mockSession)
+        let response = OTPResponse(success: true, errorMessage: nil)
         mockSession.nextData = try JSONEncoder().encode(response)
         mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
                                                    statusCode: 200,
@@ -112,7 +117,7 @@ final class OTPManagerTests: XCTestCase {
         
         KeychainHelper.standard.save("dummy_token", forKey: Constants.KeychainHelperKeys.authToken)
 
-        let manager = OTPManager(session: mockSession)
+        let manager = OTPManager(networkService: mockAuthService)
         _ = try await manager.verifyOTP("123456")
 
         guard let request = mockSession.lastRequest else {

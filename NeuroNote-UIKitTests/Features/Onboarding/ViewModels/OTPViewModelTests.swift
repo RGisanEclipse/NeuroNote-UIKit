@@ -16,12 +16,12 @@ final class OTPViewModelTests: XCTestCase {
         var didCallVerify = false
         var didCallRequest = false
         
-        func verifyOTP(_ otp: String) async throws -> OTPVerifyResponse{
+        func verifyOTP(_ otp: String) async throws -> OTPResponse{
             didCallVerify = true
             if let error = shouldThrow {
                 throw error
             }
-            return OTPVerifyResponse(success: true, message: nil)
+            return OTPResponse(success: true, errorMessage: nil)
         }
         
         func requestOTP() async throws -> OTPResponse {

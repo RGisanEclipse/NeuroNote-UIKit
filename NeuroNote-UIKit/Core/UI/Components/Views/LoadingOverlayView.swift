@@ -48,18 +48,21 @@ class LoadingOverlayView: UIView {
     // MARK: - Properties
     private var messageTimer: Timer?
     private let messages: [String] = [
-        "Brewing your OTP",
-        "Sending code faster than light",
-        "Doing the techy stuff",
-        "Summoning the OTP gods",
-        "Punching in your passcode",
-        "Whispering secrets to the server",
-        "Launching OTP rocket",
-        "Hang tight, it’s cooking",
-        "Manifesting your code",
-        "Spamming the server like it's 2010 ",
-        "OTP is en route... kinda 🛬",
-        "Bribing the firewall for entry"
+        "Vibing with the server",
+        "Cooking up your request",
+        "Lowkey doing backend stuff",
+        "Talking to the cloud, brb",
+        "Manifesting data like a pro",
+        "Loading... but aesthetic",
+        "Fetching stuff fr fr",
+        "No cap, this might take a sec",
+        "Doing the digital hustle",
+        "Coding on beast mode",
+        "Backend’s in its feels rn",
+        "Serving hot data, hold up",
+        "Just backend things",
+        "Being so real with this request",
+        "Trying not to crash (same)"
     ]
     private var currentMessageIndex = 0
     

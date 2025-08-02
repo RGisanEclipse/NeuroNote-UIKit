@@ -7,6 +7,6 @@
 
 struct AuthSession {
     let token: String
-    let userId: String
+    let refreshToken: String?
     let isVerified: Bool
 }

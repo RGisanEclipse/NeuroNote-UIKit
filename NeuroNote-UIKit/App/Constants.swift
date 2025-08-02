@@ -55,6 +55,7 @@ struct Constants{
     
     struct KeychainHelperKeys{
         static let authToken = "auth_token"
+        static let refreshToken = "refresh_token"
         static let userId    = "user_id"
     }
     
@@ -63,5 +64,6 @@ struct Constants{
         static let validPassword = "CoolPass1@"
         static let userId = "12345"
         static let otp = "1234"
+        static let token = "demoToken"
     }
 }

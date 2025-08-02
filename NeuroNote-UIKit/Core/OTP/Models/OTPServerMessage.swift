@@ -6,11 +6,12 @@
 //
 
 enum OTPServerMessage: String, Codable {
-    case invalidEmail          = "invalid email"
-    case deliveryFailed        = "delivery failed"
-    case otpVerificationFailed = "otp verification failed"
+    case invalidEmail           = "invalid email"
+    case deliveryFailed         = "delivery failed"
+    case otpVerificationFailed  = "otp verification failed"
     case tooManyRequests        = "too many requests"
-    case unknown               = "unknown"
+    case otpExpired             = "otp expired"
+    case unknown                = "unknown"
     
     init(from message: String?) {
         self = OTPServerMessage(rawValue: message ?? Constants.empty) ?? .unknown
