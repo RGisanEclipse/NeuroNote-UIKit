@@ -77,7 +77,7 @@ class LoginViewModel {
                         self.onSuccess?()
                     }
                 } else {
-                    let otpResponse = try await otpManager.requestOTP()
+                    let otpResponse = try await otpManager.requestOTP(purpose: OTPPurpose.signup)
                     
                     if otpResponse.success {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

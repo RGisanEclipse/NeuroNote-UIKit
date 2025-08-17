@@ -7,4 +7,5 @@
 
 struct OTPVerifyRequest: Encodable {
     let otp: String
+    let purpose: String
 }

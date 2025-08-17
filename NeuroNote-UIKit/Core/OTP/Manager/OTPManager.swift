@@ -7,11 +7,6 @@
 
 import Foundation
 
-protocol OTPManagerProtocol {
-    func requestOTP() async throws -> OTPResponse
-    func verifyOTP(_ code: String) async throws -> OTPResponse
-}
-
 class OTPManager: OTPManagerProtocol {
     private let networkService: AuthNetworkService
     static let shared = OTPManager()
@@ -20,7 +15,7 @@ class OTPManager: OTPManagerProtocol {
     }
 
     @discardableResult
-    func requestOTP() async throws -> OTPResponse {
+    func requestOTP(purpose: OTPPurpose) async throws -> OTPResponse {
         guard let url = URL(string: Routes.base + Routes.requestOTP) else {
             throw OTPError.badURL
         }
@@ -30,7 +25,9 @@ class OTPManager: OTPManagerProtocol {
         if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        request.httpBody = try? JSONEncoder().encode([String: String]())
+        
+        let body = OTPRequest(purpose: purpose.rawValue)
+        request.httpBody = try JSONEncoder().encode(body)
         request.timeoutInterval = 10
         
         do {
@@ -39,10 +36,7 @@ class OTPManager: OTPManagerProtocol {
                 throw OTPError.invalidResponse
             }
             
-            guard let parsed = try? JSONDecoder().decode(
-                OTPResponse.self,
-                from: data
-            ) else {
+            guard let parsed = try? JSONDecoder().decode(OTPResponse.self, from: data) else {
                 throw OTPError.decodingFailed
             }
             
@@ -74,25 +68,22 @@ class OTPManager: OTPManagerProtocol {
             throw OTPError.unexpectedError
         }
     }
-
-    func verifyOTP(_ code: String) async throws -> OTPResponse {
+    
+    func verifyOTP(_ code: String, purpose: OTPPurpose) async throws -> OTPResponse {
         guard let url = URL(string: Routes.base + Routes.verifyOTP) else {
             throw OTPError.badURL
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-
-        let body = try JSONEncoder().encode([
-            "otp": code,
-        ])
-        request.httpBody = body
+        let body = OTPVerifyRequest(otp: code, purpose: purpose.rawValue)
+        request.httpBody = try JSONEncoder().encode(body)
         request.timeoutInterval = 10
-
+        
         do {
             let (data, response) = try await networkService.performRequest(request: request)
             guard response is HTTPURLResponse else {
@@ -107,8 +98,7 @@ class OTPManager: OTPManagerProtocol {
                 let message = OTPServerMessage(from: parsed.errorMessage)
                 throw OTPError.serverError(message)
             }
-            return OTPResponse(success: true, errorMessage: nil)
-
+            return parsed
         } catch let authError as AuthNetworkError {
             switch authError {
             case .unauthorized, .tokenRefreshFailed:
