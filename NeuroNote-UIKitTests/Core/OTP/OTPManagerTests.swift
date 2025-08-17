@@ -26,7 +26,7 @@ final class OTPManagerTests: XCTestCase {
                                                    headerFields: nil)
 
         let manager = OTPManager(networkService: mockAuthService)
-        let result = try await manager.requestOTP()
+        let result = try await manager.requestOTP(purpose: OTPPurpose.signup)
         XCTAssertTrue(result.success)
     }
 
@@ -43,7 +43,7 @@ final class OTPManagerTests: XCTestCase {
         let manager = OTPManager(networkService: mockAuthService)
 
         do {
-            _ = try await manager.requestOTP()
+            _ = try await manager.requestOTP(purpose: OTPPurpose.signup)
             XCTFail("Expected OTPError was not thrown")
         } catch let error as OTPError {
             switch error {
@@ -65,7 +65,7 @@ final class OTPManagerTests: XCTestCase {
         let manager = OTPManager(networkService: mockAuthService)
         
         do {
-            _ = try await manager.requestOTP()
+            _ = try await manager.requestOTP(purpose: OTPPurpose.signup)
             XCTFail("Expected error was not thrown")
         } catch let error as NetworkError {
             switch error {
@@ -92,7 +92,7 @@ final class OTPManagerTests: XCTestCase {
         let manager = OTPManager(networkService: mockAuthService)
 
         do {
-            _ = try await manager.verifyOTP(Constants.Tests.otp)
+            _ = try await manager.verifyOTP(Constants.Tests.otp, purpose: OTPPurpose.signup)
             XCTFail("Expected OTPError was not thrown")
         } catch let error as OTPError {
             switch error {
@@ -118,7 +118,7 @@ final class OTPManagerTests: XCTestCase {
         KeychainHelper.standard.save("dummy_token", forKey: Constants.KeychainHelperKeys.authToken)
 
         let manager = OTPManager(networkService: mockAuthService)
-        _ = try await manager.verifyOTP("123456")
+        _ = try await manager.verifyOTP("123456", purpose: OTPPurpose.signup)
 
         guard let request = mockSession.lastRequest else {
             XCTFail("No request was made")

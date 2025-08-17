@@ -50,13 +50,13 @@ class OTPViewModel {
     
     // MARK: - OTP Verification
     @MainActor
-    func verify(otp: String) {
+    func verify(otp: String, purpose: OTPPurpose) {
         onAsyncStart?()
         Task {
             defer { onAsyncEnd?() }
             
             do {
-                let verified = try await otpManager.verifyOTP(otp)
+                let verified = try await otpManager.verifyOTP(otp, purpose: purpose)
                 if verified.success{
                     onOTPVerified?()
                 } else{
@@ -95,14 +95,14 @@ class OTPViewModel {
     
     // MARK: - Resend OTP
     @MainActor
-    func resendOTP() {
+    func resendOTP(purpose: OTPPurpose) {
         onAsyncStart?()
         
         Task {
             defer { onAsyncEnd?() }
             
             do {
-                _ = try await otpManager.requestOTP()
+                _ = try await otpManager.requestOTP(purpose: purpose)
                 startResendTimer()
             } catch let error as OTPError {
                 switch error {

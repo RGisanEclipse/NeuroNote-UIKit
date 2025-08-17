@@ -16,7 +16,7 @@ final class OTPViewModelTests: XCTestCase {
         var didCallVerify = false
         var didCallRequest = false
         
-        func verifyOTP(_ otp: String) async throws -> OTPResponse{
+        func verifyOTP(_ otp: String, purpose: OTPPurpose) async throws -> OTPResponse{
             didCallVerify = true
             if let error = shouldThrow {
                 throw error
@@ -24,7 +24,7 @@ final class OTPViewModelTests: XCTestCase {
             return OTPResponse(success: true, errorMessage: nil)
         }
         
-        func requestOTP() async throws -> OTPResponse {
+        func requestOTP(purpose: OTPPurpose) async throws -> OTPResponse {
             didCallRequest = true
             if let error = shouldThrow {
                 throw error
@@ -49,7 +49,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.verify(otp: Constants.Tests.otp)
+        viewModel.verify(otp: Constants.Tests.otp, purpose: OTPPurpose.signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockManager.didCallVerify)
@@ -66,7 +66,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.verify(otp: Constants.Tests.otp)
+        viewModel.verify(otp: Constants.Tests.otp, purpose: OTPPurpose.signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockManager.didCallVerify)
@@ -86,7 +86,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP()
+        viewModel.resendOTP(purpose: OTPPurpose.signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockManager.didCallRequest)
@@ -106,7 +106,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP()
+        viewModel.resendOTP(purpose: OTPPurpose.signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockManager.didCallRequest)

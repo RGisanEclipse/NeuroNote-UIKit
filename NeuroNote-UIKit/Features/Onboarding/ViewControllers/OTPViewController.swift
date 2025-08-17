@@ -255,7 +255,7 @@ class OTPViewController: UIViewController {
     }
     
     @objc private func handleResendOTP() {
-        viewModel.resendOTP()
+        viewModel.resendOTP(purpose: OTPPurpose.signup)
     }
     
     private func setupConstraints() {
@@ -421,7 +421,7 @@ extension OTPViewController: UITextFieldDelegate {
             }
             let otp = otpTextFields.compactMap { $0.text }.joined()
             if otp.count == otpTextFields.count {
-                viewModel.verify(otp: otp)
+                viewModel.verify(otp: otp, purpose: OTPPurpose.signup)
                 for (i, field) in otpTextFields.enumerated() {
                     if i == 0 {
                         enableField(field)
