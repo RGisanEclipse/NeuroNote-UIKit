@@ -9,7 +9,7 @@ import Foundation
 
 enum Routes {
 
-    static let base = "http://127.0.0.1:8080"   // Base URL, shall be updated to production later
+    static let base = "https://127.0.0.1:8443"   // Base URL, shall be updated to production later
     static let signUp = "/signup"
     static let signIn = "/signin"
     static let requestOTP = "/auth/otp/request"

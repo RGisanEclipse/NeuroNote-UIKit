@@ -55,9 +55,16 @@ extension KeychainHelper: UserIDStore {
     }
 }
 
+extension KeychainHelper: TokenStore {
+    func getRefreshToken() -> String? {
+        return read(forKey: Constants.KeychainHelperKeys.refreshToken)
+    }
+}
+
 extension KeychainHelper {
     func clearTestKeys() {
         delete(forKey: Constants.KeychainHelperKeys.authToken)
+        delete(forKey: Constants.KeychainHelperKeys.refreshToken)
         delete(forKey: Constants.KeychainHelperKeys.userId)
     }
 }

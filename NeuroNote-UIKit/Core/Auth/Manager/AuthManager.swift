@@ -57,8 +57,19 @@ class AuthManager: AuthManagerProtocol {
         
         do {
             let (data, response) = try await session.data(for: request)
+             
+            if let httpResponse = response as? HTTPURLResponse {
+                let bodyString = String(data: data, encoding: .utf8) ?? "<Unable to decode body>"
+                Logger.shared.debug("Authentication Response", fields: [
+                    "statusCode": httpResponse.statusCode,
+                    "body": bodyString,
+                    "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+                ])
+            } else {
+                throw AuthError.invalidResponse
+            }
             
-            guard response is HTTPURLResponse else {
+            guard let response = response as? HTTPURLResponse else {
                 throw AuthError.invalidResponse
             }
             
@@ -66,6 +77,9 @@ class AuthManager: AuthManagerProtocol {
                 AuthResponse.self,
                 from: data
             ) else {
+                Logger.shared.warn("JSON Decoding Failure", fields: [
+                    "request-id": response.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+                ])
                 throw AuthError.decodingFailed
             }
             
@@ -74,23 +88,33 @@ class AuthManager: AuthManagerProtocol {
                 throw AuthError.server(serverMsg)
             }
             
-            guard let token = parsed.token, let refreshToken = parsed.refreshToken else {
+            if let headerFields = response.allHeaderFields as? [String: String],
+               let url = response.url {
+                let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: url)
+                if let refreshTokenCookie = cookies.first(where: { $0.name == Constants.HTTPFields.refreshToken }) {
+                    saveRefreshToken(refreshTokenCookie.value)
+                } else {
+                    Logger.shared.error("No Refresh Token Cookie Received", fields: [
+                        "request-id": response.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+                    ])
+                    throw AuthError.noTokenReceived
+                }
+            }
+            
+            guard let token = parsed.token else {
                 throw AuthError.noTokenReceived
             }
             guard let userId = AuthTokenDecoder.standard.decodeJWT(token: token)?.userId else{
                 throw AuthError.noUserIdReceived
             }
             
-            guard let isVerified = parsed.isVerified else{
-                throw AuthError.userNotVerified
-            }
+            let isVerified = parsed.isVerified ?? false
             
             saveUserId(userId)
             saveToken(token)
-            saveRefreshToken(refreshToken)
             return AuthSession(
                 token: token,
-                refreshToken: refreshToken,
+                refreshToken: KeychainHelper.standard.getRefreshToken() ?? Constants.empty,
                 isVerified: isVerified
             )
             

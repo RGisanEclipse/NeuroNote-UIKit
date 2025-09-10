@@ -49,11 +49,15 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: token,
-            refreshToken: token,
             isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
-        mock.mockResponse = makeHTTP200Response()
+        
+        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
+                                         statusCode: 200,
+                                         httpVersion: nil,
+                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
+        mock.mockResponse = httpResponse
         
         let manager = AuthManager(session: mock)
         
@@ -78,11 +82,15 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: token,
-            refreshToken: token,
             isVerified: false
         )
         mock.mockData = try? JSONEncoder().encode(response)
-        mock.mockResponse = makeHTTP200Response()
+        // Create a response with refresh token cookie
+        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
+                                         statusCode: 200,
+                                         httpVersion: nil,
+                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
+        mock.mockResponse = httpResponse
         
         let manager = AuthManager(session: mock)
         
@@ -118,7 +126,12 @@ final class AuthManagerTests: XCTestCase {
     func testDecodingFailureThrows() async {
         let mock = MockNetworkSession()
         mock.mockData = "Not JSON".data(using: .utf8)
-        mock.mockResponse = makeHTTP200Response()
+        
+        let response = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
+                                     statusCode: 200,
+                                     httpVersion: nil,
+                                     headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
+        mock.mockResponse = response
         let manager = AuthManager(session: mock)
         
         await XCTAssertThrowsErrorAsync(try await manager.authenticate(
@@ -136,7 +149,6 @@ final class AuthManagerTests: XCTestCase {
             success: true,
             message: "ok",
             token: nil,
-            refreshToken: nil,
             isVerified: true
         )
         mock.mockData = try? JSONEncoder().encode(response)
@@ -154,15 +166,28 @@ final class AuthManagerTests: XCTestCase {
     
     func testNoUserIdThrows() async {
         let mock = MockNetworkSession()
+        let payloadDict = ["other_field": "value"] 
+        let jsonData = try! JSONSerialization.data(withJSONObject: payloadDict, options: [])
+        var base64 = jsonData.base64EncodedString()
+        base64 = base64
+            .replacingOccurrences(of: "=", with: "")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+        let tokenWithoutUserId = "header.\(base64).signature"
+        
         let response = AuthResponse(
             success: true,
             message: "ok",
-            token: Constants.Tests.token,
-            refreshToken: Constants.Tests.token,
+            token: tokenWithoutUserId,
             isVerified: false
         )
         mock.mockData = try? JSONEncoder().encode(response)
-        mock.mockResponse = makeHTTP200Response()
+        // Create a response with refresh token cookie
+        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
+                                         statusCode: 200,
+                                         httpVersion: nil,
+                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
+        mock.mockResponse = httpResponse
         let manager = AuthManager(session: mock)
         
         await XCTAssertThrowsErrorAsync(try await manager.authenticate(

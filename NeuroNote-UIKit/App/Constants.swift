@@ -9,6 +9,11 @@ struct Constants{
     
     static let empty = ""
     
+    struct HTTPFields{
+        static let requestId = "X-Request-Id"
+        static let refreshToken = "refreshToken"
+    }
+    
     struct moodImages{
         
         static let happy  = "happyFace"

@@ -90,7 +90,12 @@ class LoginViewModel {
             }
             catch {
                 let alertContent: AlertContent
-                
+                Logger.shared.error("Error during Auth", fields: [
+                    "email": email,
+                    "mode": mode == .signup ? "signup" : "signin",
+                    "errorType": String(describing: type(of: error)),
+                    "error": error.localizedDescription
+                ])
                 if let authErr = error as? AuthError,
                    case let .server(serverMsg) = authErr {
                     let pres = serverMsg.presentation
