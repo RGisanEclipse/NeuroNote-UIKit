@@ -11,7 +11,7 @@ class MockOTPManager: OTPManagerProtocol {
     
     var shouldSucceed = true
     var simulateNetworkError: NetworkError?
-    var simulateServerError: OTPServerMessage?
+    var simulateServerError: OTPServerCode?
 
     func verifyOTP(_ otp: String, purpose: OTPPurpose) async throws -> OTPResponse{
         if let networkError = simulateNetworkError {

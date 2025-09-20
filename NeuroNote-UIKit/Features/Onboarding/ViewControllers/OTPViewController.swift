@@ -255,7 +255,8 @@ class OTPViewController: UIViewController {
     }
     
     @objc private func handleResendOTP() {
-        viewModel.resendOTP(purpose: OTPPurpose.signup)
+        guard let userId = KeychainHelper.standard.getUserID() else { return }
+        viewModel.resendOTP(userId: userId)
     }
     
     private func setupConstraints() {
@@ -420,8 +421,9 @@ extension OTPViewController: UITextFieldDelegate {
                 textField.resignFirstResponder()
             }
             let otp = otpTextFields.compactMap { $0.text }.joined()
+            guard let userId = KeychainHelper.standard.getUserID() else { return false }
             if otp.count == otpTextFields.count {
-                viewModel.verify(otp: otp, purpose: OTPPurpose.signup)
+                viewModel.verify(otp: otp, userId: userId)
                 for (i, field) in otpTextFields.enumerated() {
                     if i == 0 {
                         enableField(field)

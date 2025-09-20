@@ -6,5 +6,5 @@
 //
 
 struct OTPRequest: Encodable {
-    let purpose : String
+    let userId: String
 }

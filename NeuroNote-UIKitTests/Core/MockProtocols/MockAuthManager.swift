@@ -12,7 +12,7 @@ class MockAuthManager: AuthManagerProtocol {
     
     var shouldThrowServerError = false
     var shouldThrowUnknownError = false
-    var serverMessageToThrow: AuthServerMessage = .internalServerError
+    var serverMessageToThrow: AuthServerCode = .internalServerError
     
     func authenticate(email: String, password: String, mode: AuthManager.Mode) async throws -> AuthSession {
         if shouldThrowServerError {

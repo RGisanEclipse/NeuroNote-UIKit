@@ -51,7 +51,7 @@ class KeychainHelper {
 
 extension KeychainHelper: UserIDStore {
     func getUserID() -> String? {
-        return read(forKey: "userId")
+        return read(forKey: Constants.KeychainHelperKeys.userId)
     }
 }
 

@@ -43,7 +43,7 @@ class TokenManager: TokenManagerProtocol {
         let parsed = try JSONDecoder().decode(AuthResponse.self, from: data)
         
         if !parsed.success {
-            let serverMsg = AuthServerMessage(from: parsed.message)
+            let serverMsg = AuthServerCode(from: parsed.message)
             throw AuthError.server(serverMsg)
         }
         
@@ -62,7 +62,7 @@ class TokenManager: TokenManagerProtocol {
         let newRefreshToken = refreshTokenCookie.value
         KeychainHelper.standard.save(newRefreshToken, forKey: Constants.KeychainHelperKeys.refreshToken)
         
-        guard let newAccessToken = parsed.token else {
+        guard let newAccessToken = parsed.data.token else {
             throw AuthError.noTokenReceived
         }
 

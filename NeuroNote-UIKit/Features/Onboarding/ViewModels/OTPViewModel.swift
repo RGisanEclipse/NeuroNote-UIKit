@@ -27,7 +27,6 @@ class OTPViewModel {
         }
     
     // MARK: - Public Methods
-    
     func startResendTimer() {
         timeRemaining = 60
         resendTimer?.invalidate()
@@ -50,43 +49,23 @@ class OTPViewModel {
     
     // MARK: - OTP Verification
     @MainActor
-    func verify(otp: String, purpose: OTPPurpose) {
+    func verify(otp: String, userId: String) {
         onAsyncStart?()
         Task {
             defer { onAsyncEnd?() }
             
             do {
-                let verified = try await otpManager.verifyOTP(otp, purpose: purpose)
-                if verified.success{
+                let response = try await otpManager.verifyOTP(otp, userId: userId)
+                if response.success {
                     onOTPVerified?()
-                } else{
-                    onOTPFailed?()
+                } else {
+                    handleAPIErrorCode(code: response.errorCode)
                 }
                 
-            } catch let error as OTPError {
-                switch error {
-                case .serverError(let message):
-                    if message == .otpVerificationFailed {
-                        onOTPFailed?()
-                    } else if message == .tooManyRequests{
-                        onNetworkError?(NetworkAlert.tooManyRequests.title + "\n Please try again later")
-                    } else {
-                        onServerError?()
-                    }
-                default:
-                    onServerError?()
-                }
-            } catch let error as NetworkError{
-                switch error {
-                case .noInternet:
-                    onNetworkError?(NetworkAlert.noInternet.title + "\n Please check your internet connection")
-                case .timeout:
-                    onNetworkError?(NetworkAlert.timeout.title + "\n Please try again")
-                case .cannotReachServer:
-                    onNetworkError?(NetworkAlert.cannotReachServer.title + "\n Please try again")
-                case .generic(let msg):
-                    onNetworkError?(NetworkAlert.generic(msg).title)
-                }
+            } catch let apiError as APIError {
+                handleAPIErrorCode(code: apiError.code)
+            } catch let networkError as NetworkError {
+                handleNetworkError(networkError)
             } catch {
                 onServerError?()
             }
@@ -95,36 +74,51 @@ class OTPViewModel {
     
     // MARK: - Resend OTP
     @MainActor
-    func resendOTP(purpose: OTPPurpose) {
+    func resendOTP(userId: String) {
         onAsyncStart?()
         
         Task {
             defer { onAsyncEnd?() }
             
             do {
-                _ = try await otpManager.requestOTP(purpose: purpose)
+                _ = try await otpManager.requestOTP(userId: userId)
                 startResendTimer()
-            } catch let error as OTPError {
-                switch error {
-                case .serverError:
-                    onServerError?()
-                default:
-                    onServerError?()
-                }
-            } catch let error as NetworkError {
-                switch error {
-                case .noInternet:
-                    onNetworkError?(NetworkAlert.noInternet.title + "\n Please check your internet connection")
-                case .timeout:
-                    onNetworkError?(NetworkAlert.timeout.title + "\n Please try again")
-                case .cannotReachServer:
-                    onNetworkError?(NetworkAlert.cannotReachServer.title + "\n Please try again")
-                case .generic(let msg):
-                    onNetworkError?(NetworkAlert.generic(msg).title)
-                }
+            } catch _ as APIError {
+                onServerError?()
+            } catch let networkError as NetworkError {
+                handleNetworkError(networkError)
             } catch {
                 onServerError?()
             }
+        }
+    }
+    
+    // MARK: - Private Helpers
+    private func handleAPIErrorCode(code: String?) {
+        guard let code = code else {
+            onServerError?()
+            return
+        }
+        switch code {
+        case "OTP_003":
+            onOTPFailed?()
+        case "OTP_004":
+            onOTPFailed?()
+        default:
+            onServerError?()
+        }
+    }
+    
+    private func handleNetworkError(_ error: NetworkError) {
+        switch error {
+        case .noInternet:
+            onNetworkError?(NetworkAlert.noInternet.title + "\n Please check your internet connection")
+        case .timeout:
+            onNetworkError?(NetworkAlert.timeout.title + "\n Please try again")
+        case .cannotReachServer:
+            onNetworkError?(NetworkAlert.cannotReachServer.title + "\n Please try again")
+        case .generic(let msg):
+            onNetworkError?(NetworkAlert.generic(msg).title)
         }
     }
 }

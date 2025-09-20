@@ -6,6 +6,6 @@
 //
 
 struct OTPVerifyRequest: Encodable {
-    let otp: String
-    let purpose: String
+    let code: String
+    let userId: String
 }

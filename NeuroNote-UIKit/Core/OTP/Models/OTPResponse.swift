@@ -7,5 +7,5 @@
 
 struct OTPResponse: Codable {
     let success: Bool
-    let errorMessage: String?
+    let errorCode: String?
 }
