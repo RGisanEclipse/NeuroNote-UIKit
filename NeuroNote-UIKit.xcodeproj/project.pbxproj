@@ -38,6 +38,7 @@
 		B944ED982E22991500393FAF /* Exceptions for "NeuroNote-UIKit" folder in "NeuroNote-UIKitTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Core/OTP/Models/OTPPurpose.swift,
 				"Core/UI/LottieAnimations/angry-star.json",
 				"Core/UI/LottieAnimations/birdie-success.json",
 				Core/UI/LottieAnimations/clouds.json,

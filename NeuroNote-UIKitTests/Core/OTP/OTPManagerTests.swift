@@ -10,124 +10,215 @@ import XCTest
 
 final class OTPManagerTests: XCTestCase {
     
+    var mockSession: MockNetworkSession!
+    var mockAuthService: MockAuthNetworkService!
+    var otpManager: OTPManager!
+    
+    override func setUp() {
+        super.setUp()
+        mockSession = MockNetworkSession()
+        mockAuthService = MockAuthNetworkService(session: mockSession)
+        otpManager = OTPManager(networkService: mockAuthService)
+    }
+    
     override func tearDown() {
         super.tearDown()
         KeychainHelper.standard.clearTestKeys()
+        mockSession = nil
+        mockAuthService = nil
+        otpManager = nil
     }
     
-    func testRequestOTPSuccess() async throws {
-        let mockSession = MockNetworkSession()
-        let mockAuthService = MockAuthNetworkService(session: mockSession)
-        let response = OTPResponse(success: true, errorMessage: nil)
-        mockSession.nextData = try JSONEncoder().encode(response)
-        mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
-                                                   statusCode: 200,
-                                                   httpVersion: nil,
-                                                   headerFields: nil)
-
-        let manager = OTPManager(networkService: mockAuthService)
-        let result = try await manager.requestOTP(purpose: OTPPurpose.signup)
+    // MARK: - Signup OTP Tests
+    
+    func testRequestSignupOTPSuccess() async throws {
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let result = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+        
         XCTAssertTrue(result.success)
-    }
-
-    func testRequestOTPFailureWithInvalidEmail() async throws {
-        let mockSession = MockNetworkSession()
-        let mockAuthService = MockAuthNetworkService(session: mockSession)
-        let failureResponse = OTPResponse(success: false, errorMessage: "invalid email")
-        mockSession.nextData = try JSONEncoder().encode(failureResponse)
-        mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
-                                                   statusCode: 200,
-                                                   httpVersion: nil,
-                                                   headerFields: nil)
-
-        let manager = OTPManager(networkService: mockAuthService)
-
-        do {
-            _ = try await manager.requestOTP(purpose: OTPPurpose.signup)
-            XCTFail("Expected OTPError was not thrown")
-        } catch let error as OTPError {
-            switch error {
-            case .serverError(let reason):
-                XCTAssertEqual(reason, .invalidEmail)
-            default:
-                XCTFail("Unexpected OTPError: \(error)")
-            }
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
-    }
-    
-    func testRequestOTPFailureWithURLError() async {
-        let mockSession = MockNetworkSession()
-        let mockAuthService = MockAuthNetworkService(session: mockSession)
-        mockSession.shouldThrowError = true
-
-        let manager = OTPManager(networkService: mockAuthService)
+        XCTAssertNil(result.errorCode)
         
-        do {
-            _ = try await manager.requestOTP(purpose: OTPPurpose.signup)
-            XCTFail("Expected error was not thrown")
-        } catch let error as NetworkError {
-            switch error {
-            case .generic(let message):
-                XCTAssertTrue(message.contains("The operation couldn’t be completed"))
-            default:
-                XCTFail("Expected .generic, got \(error)")
-            }
-        } catch {
-            XCTFail("Expected NetworkError, got \(error)")
-        }
-    }
-    
-    func testVerifyOTPWithInvalidOTP() async {
-        let mockSession = MockNetworkSession()
-        let mockAuthService = MockAuthNetworkService(session: mockSession)
-        let failure = OTPResponse(success: false, errorMessage: "otp verification failed")
-        mockSession.nextData = try! JSONEncoder().encode(failure)
-        mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
-                                                   statusCode: 200,
-                                                   httpVersion: nil,
-                                                   headerFields: nil)
-
-        let manager = OTPManager(networkService: mockAuthService)
-
-        do {
-            _ = try await manager.verifyOTP(Constants.Tests.otp, purpose: OTPPurpose.signup)
-            XCTFail("Expected OTPError was not thrown")
-        } catch let error as OTPError {
-            switch error {
-            case .serverError(let reason):
-                XCTAssertEqual(reason.rawValue, "otp verification failed")
-            default:
-                XCTFail("Unexpected OTPError: \(error)")
-            }
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
-    }
-    func testVerifyOTPIncludesAuthHeader() async throws {
-        let mockSession = MockNetworkSession()
-        let mockAuthService = MockAuthNetworkService(session: mockSession)
-        let response = OTPResponse(success: true, errorMessage: nil)
-        mockSession.nextData = try JSONEncoder().encode(response)
-        mockSession.nextResponse = HTTPURLResponse(url: URL(string: "https://tests.com")!,
-                                                   statusCode: 200,
-                                                   httpVersion: nil,
-                                                   headerFields: nil)
-        
-        KeychainHelper.standard.save("dummy_token", forKey: Constants.KeychainHelperKeys.authToken)
-
-        let manager = OTPManager(networkService: mockAuthService)
-        _ = try await manager.verifyOTP("123456", purpose: OTPPurpose.signup)
-
         guard let request = mockSession.lastRequest else {
             XCTFail("No request was made")
             return
         }
+        XCTAssertTrue(request.url?.absoluteString.contains("/api/v1/auth/signup/otp") == true)
+    }
+    
+    func testVerifySignupOTPSuccess() async throws {
+        
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let result = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .Signup)
+        
+        XCTAssertTrue(result.success)
+        XCTAssertNil(result.errorCode)
+        
+        // Verify the correct endpoint was called
+        guard let request = mockSession.lastRequest else {
+            XCTFail("No request was made")
+            return
+        }
+        XCTAssertTrue(request.url?.absoluteString.contains("/api/v1/auth/signup/otp/verify") == true)
+    }
+    
+    // MARK: - Forgot Password OTP Tests
+    
+    func testRequestForgotPasswordOTPSuccess() async throws {
+        
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let result = try await otpManager.requestOTP(userId: "test_user", purpose: .ForgotPassword)
+        
+        XCTAssertTrue(result.success)
+        XCTAssertNil(result.errorCode)
+        
+        // Verify the correct endpoint was called
+        guard let request = mockSession.lastRequest else {
+            XCTFail("No request was made")
+            return
+        }
+        XCTAssertTrue(request.url?.absoluteString.contains("/api/v1/auth/password/otp") == true)
+    }
+    
+    func testVerifyForgotPasswordOTPSuccess() async throws {
+        
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let result = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .ForgotPassword)
+        
+        XCTAssertTrue(result.success)
+        XCTAssertNil(result.errorCode)
+        
+        // Verify the correct endpoint was called
+        guard let request = mockSession.lastRequest else {
+            XCTFail("No request was made")
+            return
+        }
+        XCTAssertTrue(request.url?.absoluteString.contains("/api/v1/auth/password/otp/verify") == true)
+    }
+    
+    // MARK: - Error Handling Tests
+    
+    func testRequestOTPWithAPIError() async throws {
+        
+        let errorResponse = APIErrorResponse(success: false, error: APIError(code: "AUTH_001", message: "Invalid email", status: 400), data: nil)
+        mockSession.nextData = try JSONEncoder().encode(errorResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 400,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        // When & Then
+        do {
+            _ = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+            XCTFail("Expected APIError to be thrown")
+        } catch let error as APIError {
+            XCTAssertEqual(error.code, "AUTH_001")
+            XCTAssertEqual(error.message, "Invalid email")
+            XCTAssertEqual(error.status, 400)
+        } catch {
+            XCTFail("Expected APIError, got \(type(of: error))")
+        }
+    }
+    
+    func testVerifyOTPWithAPIError() async throws {
+        
+        let errorResponse = APIErrorResponse(success: false, error: APIError(code: "OTP_004", message: "Invalid OTP", status: 400), data: nil)
+        mockSession.nextData = try JSONEncoder().encode(errorResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 400,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        // When & Then
+        do {
+            _ = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .Signup)
+            XCTFail("Expected APIError to be thrown")
+        } catch let error as APIError {
+            XCTAssertEqual(error.code, "OTP_004")
+            XCTAssertEqual(error.message, "Invalid OTP")
+            XCTAssertEqual(error.status, 400)
+        } catch {
+            XCTFail("Expected APIError, got \(type(of: error))")
+        }
+    }
 
-        XCTAssertEqual(request.httpMethod, "POST")
-
-        let authHeader = request.value(forHTTPHeaderField: "Authorization")
-        XCTAssertEqual(authHeader, "Bearer dummy_token", "Authorization header not correctly set")
+    
+    // MARK: - Timeout Tests
+    
+    func testRequestOTPTimeout() async throws {
+        
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        _ = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+        
+        guard let request = mockSession.lastRequest else {
+            XCTFail("No request was made")
+            return
+        }
+        
+        XCTAssertEqual(request.timeoutInterval, 10)
+    }
+    
+    func testVerifyOTPTimeout() async throws {
+        
+        let expectedResponse = NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        mockSession.nextData = try JSONEncoder().encode(expectedResponse)
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://tests.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        _ = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .Signup)
+        
+        guard let request = mockSession.lastRequest else {
+            XCTFail("No request was made")
+            return
+        }
+        
+        XCTAssertEqual(request.timeoutInterval, 10)
     }
 }

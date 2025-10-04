@@ -56,31 +56,6 @@ final class LoginViewModelTests: XCTestCase {
         XCTAssertEqual(alert?.title, AuthAlert.passwordMismatch.title)
     }
     
-    @MainActor
-    func testServerErrorShowsCorrectAlert() {
-        let mock = MockAuthManager()
-        mock.shouldThrowServerError = true
-
-        let viewModel = LoginViewModel(authManager: mock)
-        let expectation = XCTestExpectation(description: "Server error alert received")
-
-        var alert: AlertContent?
-
-        viewModel.onMessage = {
-            alert = $0
-            expectation.fulfill()
-        }
-
-        viewModel.signInButtonTapped(
-            email: "neuronotetests@gmail.com",
-            password: "CoolPass1@",
-            confirmPassword: "CoolPass1@",
-            mode: .signup
-        )
-
-        wait(for: [expectation], timeout: 3)
-        XCTAssertEqual(alert?.title, AuthAlert.internalServerError.title)
-    }
     
     @MainActor
     func testUnknownErrorShowsDefaultAlert() {

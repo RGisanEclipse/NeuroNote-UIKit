@@ -548,7 +548,7 @@ class LoginViewController: UIViewController {
         viewModel.onOTPRequired = { [weak self] in
             guard let self = self else { return }
             self.hideLoadingOverlay()
-            let otpVC = OTPViewController()
+            let otpVC = OTPViewController(purpose: OTPPurpose.Signup)
             otpVC.modalPresentationStyle = .fullScreen
             otpVC.modalTransitionStyle = .coverVertical
             self.present(otpVC, animated: true)

@@ -52,7 +52,7 @@ struct Constants{
     }
     
     struct OTPViewControllerConstants{
-        static let titleLabel = "We Just Met"
+        static let titleLabel = "Prove you're the real one"
         static let messageLabel = "We've sent an OTP on your email. Look, it’s not that we don’t trust you. Wait, actually, it is. So, OTP please?"
         static let serverError = "Our server's on a snack break 🍕\n Try again in a bit!"
         static let backgroundImageName = "otpBG"

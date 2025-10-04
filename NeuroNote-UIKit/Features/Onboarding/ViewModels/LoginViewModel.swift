@@ -81,7 +81,7 @@ class LoginViewModel {
                     guard let userId = KeychainHelper.standard.getUserID() else {
                         throw APIError(code: "CLIENT_ERROR", message: "No user id in keychain", status: 0)
                     }
-                    let otpResponse = try await otpManager.requestOTP(userId: userId)
+                    let otpResponse = try await otpManager.requestOTP(userId: userId, purpose: OTPPurpose.Signup)
                     if otpResponse.success {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             self.onOTPRequired?()

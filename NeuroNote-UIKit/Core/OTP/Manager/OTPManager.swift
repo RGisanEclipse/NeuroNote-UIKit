@@ -15,8 +15,10 @@ class OTPManager: OTPManagerProtocol {
     }
     
     @discardableResult
-    func requestOTP(userId: String) async throws -> OTPResponse {
-        guard let url = URL(string: Routes.base + Routes.requestSignupOTP) else {
+    func requestOTP(userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
+        let endpoint = getRequestEndpointFromPurpose(purpose: purpose)
+        
+        guard let url = URL(string: Routes.base + endpoint) else {
             throw AuthError.badURL
         }
         
@@ -58,8 +60,10 @@ class OTPManager: OTPManagerProtocol {
     }
     
     @discardableResult
-    func verifyOTP(_ code: String, userId: String) async throws -> OTPResponse {
-        guard let url = URL(string: Routes.base + Routes.verifySignupOTP) else {
+    func verifyOTP(_ code: String, userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
+        let endpoint = getVerifyEndpointFromPurpose(purpose: purpose)
+        
+        guard let url = URL(string: Routes.base + endpoint) else {
             throw AuthError.badURL
         }
         
@@ -99,6 +103,24 @@ class OTPManager: OTPManagerProtocol {
         } catch {
             print("Unexpected error during OTP verification: \(error)")
             throw AuthError.unexpectedError
+        }
+    }
+    
+    func getRequestEndpointFromPurpose(purpose: OTPPurpose) -> String{
+        switch purpose{
+        case .Signup:
+            return Routes.requestSignupOTP
+        case .ForgotPassword:
+            return Routes.requestForgotPasswordOTP
+        }
+    }
+    
+    func getVerifyEndpointFromPurpose(purpose: OTPPurpose) -> String{
+        switch purpose{
+        case .Signup:
+            return Routes.verifySignupOTP
+        case .ForgotPassword:
+            return Routes.verifyForgotPasswordOTP
         }
     }
 }
