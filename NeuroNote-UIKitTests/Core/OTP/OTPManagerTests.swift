@@ -41,7 +41,8 @@ final class OTPManagerTests: XCTestCase {
             headerFields: nil
         )
         
-        let result = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+        let requestData = SignupOTPRequest(userId: "test_user")
+        let result = try await otpManager.requestOTP(requestData: requestData, purpose: .Signup)
         
         XCTAssertTrue(result.success)
         XCTAssertNil(result.errorCode)
@@ -90,7 +91,8 @@ final class OTPManagerTests: XCTestCase {
             headerFields: nil
         )
         
-        let result = try await otpManager.requestOTP(userId: "test_user", purpose: .ForgotPassword)
+        let requestData = ForgotPasswordOTPRequest(email: "test@example.com")
+        let result = try await otpManager.requestOTP(requestData: requestData, purpose: .ForgotPassword)
         
         XCTAssertTrue(result.success)
         XCTAssertNil(result.errorCode)
@@ -142,7 +144,8 @@ final class OTPManagerTests: XCTestCase {
         
         // When & Then
         do {
-            _ = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+            let requestData = SignupOTPRequest(userId: "test_user")
+            _ = try await otpManager.requestOTP(requestData: requestData, purpose: .Signup)
             XCTFail("Expected APIError to be thrown")
         } catch let error as APIError {
             XCTAssertEqual(error.code, "AUTH_001")
@@ -191,7 +194,8 @@ final class OTPManagerTests: XCTestCase {
             headerFields: nil
         )
         
-        _ = try await otpManager.requestOTP(userId: "test_user", purpose: .Signup)
+        let requestData = SignupOTPRequest(userId: "test_user")
+        _ = try await otpManager.requestOTP(requestData: requestData, purpose: .Signup)
         
         guard let request = mockSession.lastRequest else {
             XCTFail("No request was made")
@@ -212,7 +216,7 @@ final class OTPManagerTests: XCTestCase {
             headerFields: nil
         )
         
-        _ = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .Signup)
+        _ = try await otpManager.verifyOTP("1234", userId: "test_user", purpose: .Signup)
         
         guard let request = mockSession.lastRequest else {
             XCTFail("No request was made")

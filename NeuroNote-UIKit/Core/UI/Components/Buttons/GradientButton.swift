@@ -64,7 +64,9 @@ class GradientButton: UIButton {
     
     func setLoading(_ isLoading: Bool) {
         isEnabled = !isLoading
+        
         if isLoading {
+            cachedTitle = title(for: .normal)
             setTitle(Constants.empty, for: .normal)
             lottieView.transform = CGAffineTransform(scaleX: 3.0, y: 3.0)
             lottieView.isHidden = false
@@ -75,9 +77,11 @@ class GradientButton: UIButton {
             lottieView.isHidden = true
             lottieView.transform = .identity
             gradientLayer.colors = originalColors
+            if let cachedTitle = cachedTitle {
+                setTitle(cachedTitle, for: .normal)
+            }
         }
     }
-
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

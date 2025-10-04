@@ -15,7 +15,7 @@ class OTPManager: OTPManagerProtocol {
     }
     
     @discardableResult
-    func requestOTP(userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
+    func requestOTP(requestData: OTPRequestData, purpose: OTPPurpose) async throws -> OTPResponse {
         let endpoint = getRequestEndpointFromPurpose(purpose: purpose)
         
         guard let url = URL(string: Routes.base + endpoint) else {
@@ -29,8 +29,7 @@ class OTPManager: OTPManagerProtocol {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
-        let body = OTPRequest(userId: userId)
-        request.httpBody = try JSONEncoder().encode(body)
+        request.httpBody = try JSONEncoder().encode(requestData)
         request.timeoutInterval = 10
         
         do {

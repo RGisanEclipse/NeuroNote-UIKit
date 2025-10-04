@@ -19,7 +19,8 @@ class LoginViewModel {
     
     var onMessage: ((AlertContent) -> Void)?
     var onAsyncStart: (() -> Void)?
-    var onSuccess: (() -> Void)?
+    var onSigninSuccess: (() -> Void)?
+    var onForgotPasswordOTPSuccess: (() -> Void)?
     var onOTPRequired: (() -> Void)?
     
     private let authManager: AuthManagerProtocol
@@ -31,8 +32,66 @@ class LoginViewModel {
         self.authManager = authManager
         self.otpManager = otpManager
     }
+    
     func forgotPasswordButtonTapped(email: String) {
-        onMessage?(AuthAlert.forgotPassword)
+        guard !email.isEmpty else{
+            onMessage?(AuthAlert.fieldsMissing)
+            return
+        }
+        if let emailAlert = EmailValidator.validate(email: email){
+            onMessage?(emailAlert)
+            return
+        }
+        // Network call to Backend
+        Task{ [weak self] in
+            guard let self = self else { return }
+            onAsyncStart?()
+            do {
+                let otpResponse = try await otpManager.requestOTP(requestData: ForgotPasswordOTPRequest(email: email), purpose: OTPPurpose.ForgotPassword)
+                if otpResponse.success {
+                    // Ask the view controller to navigate back to the OTP screen
+                    self.onForgotPasswordOTPSuccess?()
+                }
+            } catch {
+                // If the success is false, it's going to automatically catch the APIError/NetworkError
+                // and show the alert
+                let alertContent: AlertContent
+                
+                Logger.shared.error("Error during Forgot Password Request", fields: [
+                    "email": email,
+                    "errorType": String(describing: type(of: error)),
+                    "error": error.localizedDescription
+                ])
+                
+                if let apiError = error as? APIError {
+                    if let authCode = AuthServerCode(rawValue: apiError.code) {
+                        alertContent = authCode.presentation
+                    }
+                    else {
+                        alertContent = AuthAlert.unknown
+                    }
+                }
+                
+                else if let networkErr = error as? NetworkError {
+                    switch networkErr {
+                    case .noInternet:
+                        alertContent = NetworkAlert.noInternet
+                    case .timeout:
+                        alertContent = NetworkAlert.timeout
+                    case .cannotReachServer:
+                        alertContent = NetworkAlert.cannotReachServer
+                    case .generic(let msg):
+                        alertContent = NetworkAlert.generic(msg)
+                    }
+                } else {
+                    alertContent = AuthAlert.unknown
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.onMessage?(alertContent)
+                }
+            }
+        }
     }
     
     @MainActor
@@ -75,13 +134,14 @@ class LoginViewModel {
                 
                 if session.isVerified {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.onSuccess?()
+                        self.onSigninSuccess?()
                     }
                 } else {
                     guard let userId = KeychainHelper.standard.getUserID() else {
-                        throw APIError(code: "CLIENT_ERROR", message: "No user id in keychain", status: 0)
+                        Logger.shared.error("User Id not found in Keychain")
+                        return
                     }
-                    let otpResponse = try await otpManager.requestOTP(userId: userId, purpose: OTPPurpose.Signup)
+                    let otpResponse = try await otpManager.requestOTP(requestData: SignupOTPRequest(userId: userId), purpose: OTPPurpose.Signup)
                     if otpResponse.success {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             self.onOTPRequired?()

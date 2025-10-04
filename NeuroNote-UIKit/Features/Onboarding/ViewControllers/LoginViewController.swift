@@ -520,7 +520,7 @@ class LoginViewController: UIViewController {
             }
         }
 
-        viewModel.onSuccess = { [weak self] in
+        viewModel.onSigninSuccess = { [weak self] in
             guard let self = self else { return }
             self.signInButton.setLoading(false)
             self.updateSignInButtonTitle()
@@ -544,11 +544,22 @@ class LoginViewController: UIViewController {
 
             self.hideLoadingOverlay()
         }
-
+        
+        viewModel.onForgotPasswordOTPSuccess = { [weak self] in
+            guard let self = self else { return }
+            self.signInButton.setLoading(false)
+            guard let userId = KeychainHelper.standard.getUserID() else { return }
+            let otpVC = OTPViewController(purpose: OTPPurpose.ForgotPassword, requestData: SignupOTPRequest(userId: userId),)
+            otpVC.modalPresentationStyle = .fullScreen
+            otpVC.modalTransitionStyle = .coverVertical
+            self.present(otpVC, animated: true)
+        }
+        
         viewModel.onOTPRequired = { [weak self] in
             guard let self = self else { return }
             self.hideLoadingOverlay()
-            let otpVC = OTPViewController(purpose: OTPPurpose.Signup)
+            self.signInButton.setLoading(false)
+            let otpVC = OTPViewController(purpose: OTPPurpose.Signup, requestData: ForgotPasswordOTPRequest(email: emailView.getText() ?? Constants.empty))
             otpVC.modalPresentationStyle = .fullScreen
             otpVC.modalTransitionStyle = .coverVertical
             self.present(otpVC, animated: true)

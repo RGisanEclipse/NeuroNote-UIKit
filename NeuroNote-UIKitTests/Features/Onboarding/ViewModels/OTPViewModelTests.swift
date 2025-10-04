@@ -22,9 +22,8 @@ final class OTPViewModelTests: XCTestCase {
         var lastRequestUserId: String?
         var lastRequestPurpose: NeuroNote_UIKit.OTPPurpose?
         
-        func requestOTP(userId: String, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
+        func requestOTP(requestData: OTPRequestData,purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
             didCallRequest = true
-            lastRequestUserId = userId
             lastRequestPurpose = purpose
             
             if let networkError = simulateNetworkError {
@@ -121,11 +120,10 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(userId: "test_user", purpose: .Signup)
+        viewModel.resendOTP(requestData: SignupOTPRequest(userId: Constants.Tests.userId),purpose: .Signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
-        XCTAssertEqual(mockOTPManager.lastRequestUserId, "test_user")
         XCTAssertEqual(mockOTPManager.lastRequestPurpose, .Signup)
     }
     
@@ -158,11 +156,10 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(userId: "test_user", purpose: .ForgotPassword)
+        viewModel.resendOTP(requestData: ForgotPasswordOTPRequest(email: Constants.Tests.validEmail),purpose: .ForgotPassword)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
-        XCTAssertEqual(mockOTPManager.lastRequestUserId, "test_user")
         XCTAssertEqual(mockOTPManager.lastRequestPurpose, .ForgotPassword)
     }
     
@@ -210,7 +207,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(userId: "test_user", purpose: .Signup)
+        viewModel.resendOTP(requestData: SignupOTPRequest(userId: "test_user"), purpose: .Signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
@@ -228,7 +225,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(userId: "test_user", purpose: .Signup)
+        viewModel.resendOTP(requestData: SignupOTPRequest(userId: "test_user"), purpose: .Signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
@@ -257,7 +254,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = { startExp.fulfill() }
         viewModel.onAsyncEnd = { endExp.fulfill() }
         
-        viewModel.resendOTP(userId: "test_user", purpose: .Signup)
+        viewModel.resendOTP(requestData: SignupOTPRequest(userId: "test_user"), purpose: .Signup)
         
         wait(for: [startExp, endExp], timeout: 2, enforceOrder: true)
     }

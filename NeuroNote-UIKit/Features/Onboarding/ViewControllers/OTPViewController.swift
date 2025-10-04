@@ -10,8 +10,9 @@ import Lottie
 
 class OTPViewController: UIViewController {
     
-    init(purpose: OTPPurpose) {
+    init(purpose: OTPPurpose, requestData: OTPRequestData) {
         self.purpose = purpose
+        self.requestData = requestData
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -21,6 +22,7 @@ class OTPViewController: UIViewController {
     
     private var viewModel = OTPViewModel()
     private var purpose: OTPPurpose
+    private var requestData: OTPRequestData
     
     // MARK: - Lottie Animation
     private let otpAnimationView: LottieAnimationView = {
@@ -176,22 +178,28 @@ class OTPViewController: UIViewController {
         viewModel.onOTPVerified = { [weak self] in
             guard let self = self else { return }
             self.clearOTPFields(otpCase: OTPCases.correctOTP)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
-                let successView = AuthSuccessView()
-                self.view.addSubview(successView)
-                NSLayoutConstraint.activate([
-                    successView.topAnchor.constraint(equalTo: self.view.topAnchor),
-                    successView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-                    successView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-                    successView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
-                ])
-                successView.onAnimationCompletion = {
-                    let signupVC = SignupViewController()
-                    signupVC.modalPresentationStyle = .fullScreen
-                    signupVC.modalTransitionStyle = .coverVertical
-                    self.present(signupVC, animated: true, completion: nil)
+            switch purpose {
+            case .Signup:
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    let successView = AuthSuccessView()
+                    self.view.addSubview(successView)
+                    NSLayoutConstraint.activate([
+                        successView.topAnchor.constraint(equalTo: self.view.topAnchor),
+                        successView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
+                        successView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                        successView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
+                    ])
+                    successView.onAnimationCompletion = {
+                        let signupVC = SignupViewController()
+                        signupVC.modalPresentationStyle = .fullScreen
+                        signupVC.modalTransitionStyle = .coverVertical
+                        self.present(signupVC, animated: true, completion: nil)
+                    }
                 }
+            case .ForgotPassword:
+                // Navigate to the create password screen
+                Logger.shared.debug("Reached the end of the Forgot Password OTP Flow!")
             }
         }
         viewModel.onServerError = { [weak self] in
@@ -266,12 +274,11 @@ class OTPViewController: UIViewController {
     }
     
     @objc private func handleGoBack() {
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true, completion: nil)
     }
     
     @objc private func handleResendOTP() {
-        guard let userId = KeychainHelper.standard.getUserID() else { return }
-        viewModel.resendOTP(userId: userId, purpose: self.purpose)
+        viewModel.resendOTP(requestData: self.requestData, purpose: self.purpose)
     }
     
     private func setupConstraints() {
@@ -506,5 +513,5 @@ enum OTPCases{
 }
 
 #Preview{
-    OTPViewController(purpose: OTPPurpose.Signup)
+    OTPViewController(purpose: OTPPurpose.Signup, requestData: SignupOTPRequest(userId: "random-user-id"))
 }

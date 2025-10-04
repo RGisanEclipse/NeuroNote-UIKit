@@ -6,6 +6,6 @@
 //
 
 protocol OTPManagerProtocol {
-    func requestOTP(userId: String, purpose: OTPPurpose) async throws -> OTPResponse
+    func requestOTP(requestData: OTPRequestData, purpose: OTPPurpose) async throws -> OTPResponse
     func verifyOTP(_ code: String, userId: String, purpose: OTPPurpose) async throws -> OTPResponse
 }
