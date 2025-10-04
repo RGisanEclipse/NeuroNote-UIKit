@@ -33,21 +33,42 @@ class TokenManager: TokenManagerProtocol {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["refresh_token": refreshToken])
         request.timeoutInterval = 10
-
+        
         let (data, response) = try await session.data(for: request)
-        guard response is HTTPURLResponse else {
+        
+        guard let response = response as? HTTPURLResponse else {
             throw AuthError.invalidResponse
         }
-
+        
         let parsed = try JSONDecoder().decode(AuthResponse.self, from: data)
-        guard let newAccessToken = parsed.token, let newRefreshToken = parsed.refreshToken else {
+        
+        if !parsed.success {
+            let serverMsg = AuthServerCode(from: parsed.message)
+            throw AuthError.server(serverMsg)
+        }
+        
+        guard
+            let headerFields = response.allHeaderFields as? [String: String],
+            let url = response.url
+        else {
+            throw AuthError.noTokenReceived
+        }
+
+        let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: url)
+        guard let refreshTokenCookie = cookies.first(where: { $0.name == "refreshToken" }) else {
+            throw AuthError.noTokenReceived
+        }
+        
+        let newRefreshToken = refreshTokenCookie.value
+        KeychainHelper.standard.save(newRefreshToken, forKey: Constants.KeychainHelperKeys.refreshToken)
+        
+        guard let newAccessToken = parsed.data.token else {
             throw AuthError.noTokenReceived
         }
 
         KeychainHelper.standard.save(newAccessToken, forKey: Constants.KeychainHelperKeys.authToken)
-        KeychainHelper.standard.save(newRefreshToken, forKey: Constants.KeychainHelperKeys.refreshToken)
 
-        return (newAccessToken, newRefreshToken)
+        return (accessToken: newAccessToken, refreshToken: newRefreshToken)
     }
 
     func logout() {

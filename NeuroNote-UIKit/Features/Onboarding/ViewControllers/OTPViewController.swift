@@ -10,7 +10,17 @@ import Lottie
 
 class OTPViewController: UIViewController {
     
+    init(purpose: OTPPurpose) {
+        self.purpose = purpose
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     private var viewModel = OTPViewModel()
+    private var purpose: OTPPurpose
     
     // MARK: - Lottie Animation
     private let otpAnimationView: LottieAnimationView = {
@@ -65,25 +75,30 @@ class OTPViewController: UIViewController {
     }()
     
     // Go Back Button
-    private let goBackButton: GradientButton = {
-        let button = GradientButton(
-            title: "Back to Login",
-            leadingColor: UIColor.systemIndigo.cgColor,
-            trailingColor: UIColor.systemIndigo.cgColor
-        )
+    private let goBackButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Back to Login", for: .normal)
         button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = UIFont(name: Fonts.MontserratMedium, size:16) ??
+            .systemFont(ofSize: 16, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 16
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
+        
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        
         return button
     }()
-    
     // Title
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .white
         label.numberOfLines = 0
-        label.font = UIFont(name: Fonts.MontserratMedium, size: 32) ?? .systemFont(ofSize: 32, weight: .bold)
+        label.font = UIFont(name: Fonts.MontserratMedium, size: 28) ?? .systemFont(ofSize: 28, weight: .bold)
         label.textAlignment = .center
         label.text = Constants.OTPViewControllerConstants.titleLabel
         return label
@@ -255,7 +270,8 @@ class OTPViewController: UIViewController {
     }
     
     @objc private func handleResendOTP() {
-        viewModel.resendOTP(purpose: OTPPurpose.signup)
+        guard let userId = KeychainHelper.standard.getUserID() else { return }
+        viewModel.resendOTP(userId: userId, purpose: self.purpose)
     }
     
     private func setupConstraints() {
@@ -270,10 +286,10 @@ class OTPViewController: UIViewController {
             otpAnimationView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             otpAnimationView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.25),
             
-            scrollView.topAnchor.constraint(equalTo: otpAnimationView.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: otpAnimationView.bottomAnchor, constant: -8),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: goBackButton.topAnchor, constant: -12),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             scrollContentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             scrollContentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
@@ -420,8 +436,9 @@ extension OTPViewController: UITextFieldDelegate {
                 textField.resignFirstResponder()
             }
             let otp = otpTextFields.compactMap { $0.text }.joined()
+            guard let userId = KeychainHelper.standard.getUserID() else { return false }
             if otp.count == otpTextFields.count {
-                viewModel.verify(otp: otp, purpose: OTPPurpose.signup)
+                viewModel.verify(otp: otp, userId: userId, purpose: self.purpose)
                 for (i, field) in otpTextFields.enumerated() {
                     if i == 0 {
                         enableField(field)
@@ -489,5 +506,5 @@ enum OTPCases{
 }
 
 #Preview{
-    OTPViewController()
+    OTPViewController(purpose: OTPPurpose.Signup)
 }

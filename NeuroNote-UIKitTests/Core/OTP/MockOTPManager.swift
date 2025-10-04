@@ -11,30 +11,33 @@ class MockOTPManager: OTPManagerProtocol {
     
     var shouldSucceed = true
     var simulateNetworkError: NetworkError?
-    var simulateServerError: OTPServerMessage?
+    var simulateAPIError: APIError?
 
-    func verifyOTP(_ otp: String, purpose: OTPPurpose) async throws -> OTPResponse{
+    func requestOTP(userId: String, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
         if let networkError = simulateNetworkError {
             throw networkError
         }
-        if let serverError = simulateServerError {
-            throw OTPError.serverError(serverError)
+        if let apiError = simulateAPIError {
+            throw apiError
         }
         if !shouldSucceed {
-            throw OTPError.serverError(.otpVerificationFailed)
+            throw APIError(code: "AUTH_014", message: "failed to send OTP", status: 500)
         }
-        return OTPResponse(
-            success: true,
-            errorMessage: nil)
+        return NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
     }
-
-    func requestOTP(purpose: OTPPurpose) async throws -> OTPResponse {
+    
+    func verifyOTP(_ code: String, userId: String, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
         if let networkError = simulateNetworkError {
             throw networkError
         }
-        if !shouldSucceed {
-            throw OTPError.serverError(.deliveryFailed)
+        if let apiError = simulateAPIError {
+            throw apiError
         }
-        return OTPResponse(success: true, errorMessage: nil)
+        if !shouldSucceed {
+            throw APIError(code: "OTP_004", message: "invalid otp", status: 400)
+        }
+        return NeuroNote_UIKit.OTPResponse(
+            success: true,
+            errorCode: nil)
     }
 }

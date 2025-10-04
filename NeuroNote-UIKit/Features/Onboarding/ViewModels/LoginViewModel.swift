@@ -35,6 +35,7 @@ class LoginViewModel {
         onMessage?(AuthAlert.forgotPassword)
     }
     
+    @MainActor
     func signInButtonTapped(email: String,
                             password: String,
                             confirmPassword: String?,
@@ -77,39 +78,38 @@ class LoginViewModel {
                         self.onSuccess?()
                     }
                 } else {
-                    let otpResponse = try await otpManager.requestOTP(purpose: OTPPurpose.signup)
-                    
+                    guard let userId = KeychainHelper.standard.getUserID() else {
+                        throw APIError(code: "CLIENT_ERROR", message: "No user id in keychain", status: 0)
+                    }
+                    let otpResponse = try await otpManager.requestOTP(userId: userId, purpose: OTPPurpose.Signup)
                     if otpResponse.success {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             self.onOTPRequired?()
                         }
                     } else {
-                        throw OTPError.invalidResponse
+                        throw APIError(code: "UNKNOWN", message: "OTP request failed", status: 0)
                     }
                 }
             }
             catch {
                 let alertContent: AlertContent
                 
-                if let authErr = error as? AuthError,
-                   case let .server(serverMsg) = authErr {
-                    let pres = serverMsg.presentation
-                    alertContent = AlertContent(
-                        title: pres.title,
-                        message: pres.message,
-                        shouldBeRed: pres.shouldBeRed,
-                        animationName: pres.animationName
-                    )
-                } else if let otpErr = error as? OTPError,
-                          case .serverError(let msg) = otpErr{
-                    let pres = msg.presentation
-                    alertContent = AlertContent(
-                        title: pres.title,
-                        message: pres.message,
-                        shouldBeRed: pres.shouldBeRed,
-                        animationName: pres.animationName
-                    )
+                Logger.shared.error("Error during Auth", fields: [
+                    "email": email,
+                    "mode": mode == .signup ? "signup" : "signin",
+                    "errorType": String(describing: type(of: error)),
+                    "error": error.localizedDescription
+                ])
+                
+                if let apiError = error as? APIError {
+                    if let authCode = AuthServerCode(rawValue: apiError.code) {
+                        alertContent = authCode.presentation
+                    }
+                    else {
+                        alertContent = AuthAlert.unknown
+                    }
                 }
+                
                 else if let networkErr = error as? NetworkError {
                     switch networkErr {
                     case .noInternet:

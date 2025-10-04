@@ -45,74 +45,79 @@ class AuthManager: AuthManagerProtocol {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue(
-            "application/json",
-            forHTTPHeaderField: "Content-Type"
-        )
-        request.httpBody = try JSONEncoder().encode(AuthRequest(
-            email: email,
-            password: password
-        ))
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(AuthRequest(email: email, password: password))
         request.timeoutInterval = 10
-        
+
         do {
             let (data, response) = try await session.data(for: request)
-            
-            guard response is HTTPURLResponse else {
+
+            guard let httpResponse = response as? HTTPURLResponse else {
                 throw AuthError.invalidResponse
             }
-            
-            guard let parsed = try? JSONDecoder().decode(
-                AuthResponse.self,
-                from: data
-            ) else {
-                throw AuthError.decodingFailed
+
+            let bodyString = String(data: data, encoding: .utf8) ?? "<Unable to decode body>"
+            Logger.shared.debug("Authentication Response", fields: [
+                "statusCode": httpResponse.statusCode,
+                "body": bodyString,
+                "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+            ])
+            struct SuccessWrapper: Codable { let success: Bool }
+            let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
+
+            if wrapper.success {
+                let parsed = try JSONDecoder().decode(AuthResponse.self, from: data)
+
+                guard let token = parsed.data.token else { throw AuthError.noTokenReceived }
+                let isVerified = parsed.data.isVerified ?? false
+                
+                if let headerFields = httpResponse.allHeaderFields as? [String: String] {
+                    let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: httpResponse.url!)
+                    if let refreshTokenCookie = cookies.first(where: { $0.name == Constants.HTTPFields.refreshToken }) {
+                        saveRefreshToken(refreshTokenCookie.value)
+                    }
+                }
+
+                if mode == .signup {
+                    guard let userId = AuthTokenDecoder.standard.decodeJWT(token: token)?.userId else {
+                        throw AuthError.noUserIdReceived
+                    }
+                    print(userId)
+                    saveUserId(userId)
+
+                }
+                saveToken(token)
+
+                return AuthSession(
+                    token: token,
+                    refreshToken: KeychainHelper.standard.getRefreshToken() ?? Constants.empty,
+                    isVerified: isVerified
+                )
+
+            } else {
+                let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
+                Logger.shared.error("API Error Response", fields: [
+                    "code": apiErrorResponse.error.code,
+                    "message": apiErrorResponse.error.message,
+                    "status": apiErrorResponse.error.status,
+                    "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+                ])
+                throw apiErrorResponse.error
             }
-            
-            if !parsed.success {
-                let serverMsg = AuthServerMessage(from: parsed.message)
-                throw AuthError.server(serverMsg)
-            }
-            
-            guard let token = parsed.token, let refreshToken = parsed.refreshToken else {
-                throw AuthError.noTokenReceived
-            }
-            guard let userId = AuthTokenDecoder.standard.decodeJWT(token: token)?.userId else{
-                throw AuthError.noUserIdReceived
-            }
-            
-            guard let isVerified = parsed.isVerified else{
-                throw AuthError.userNotVerified
-            }
-            
-            saveUserId(userId)
-            saveToken(token)
-            saveRefreshToken(refreshToken)
-            return AuthSession(
-                token: token,
-                refreshToken: refreshToken,
-                isVerified: isVerified
-            )
-            
+
         } catch let error as URLError {
             switch error.code {
-            case .notConnectedToInternet,
-                    .networkConnectionLost:
+            case .notConnectedToInternet, .networkConnectionLost:
                 throw NetworkError.noInternet
-                
-            case .cannotFindHost,
-                    .cannotConnectToHost:
+            case .cannotFindHost, .cannotConnectToHost:
                 throw NetworkError.cannotReachServer
-                
             case .timedOut:
                 throw NetworkError.timeout
-                
             default:
                 throw NetworkError.generic(message: error.localizedDescription)
             }
-        }
-        catch let authErr as AuthError {
-            throw authErr
+        } catch let apiError as APIError {
+            throw apiError
         } catch {
             throw AuthError.unexpectedError
         }

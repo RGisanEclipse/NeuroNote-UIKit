@@ -17,7 +17,7 @@ enum AuthError: LocalizedError, Equatable {
     case noUserIdReceived
     case userNotVerified
     case noRefreshToken
-    case server(AuthServerMessage)
+    case server(AuthServerCode)
 
     var errorDescription: String? {
         switch self {

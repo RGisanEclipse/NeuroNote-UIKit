@@ -51,13 +51,20 @@ class KeychainHelper {
 
 extension KeychainHelper: UserIDStore {
     func getUserID() -> String? {
-        return read(forKey: "userId")
+        return read(forKey: Constants.KeychainHelperKeys.userId)
+    }
+}
+
+extension KeychainHelper: TokenStore {
+    func getRefreshToken() -> String? {
+        return read(forKey: Constants.KeychainHelperKeys.refreshToken)
     }
 }
 
 extension KeychainHelper {
     func clearTestKeys() {
         delete(forKey: Constants.KeychainHelperKeys.authToken)
+        delete(forKey: Constants.KeychainHelperKeys.refreshToken)
         delete(forKey: Constants.KeychainHelperKeys.userId)
     }
 }
