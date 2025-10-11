@@ -35,6 +35,7 @@ struct Constants{
         static let jetPack = "jetpack"
         static let plane = "plane"
         static let otpChair = "otp-chair"
+        static let phonePassword = "phone-password"
     }
     struct LaunchScreenConstants{
         
@@ -70,5 +71,9 @@ struct Constants{
         static let userId = "12345"
         static let otp = "1234"
         static let token = "demoToken"
+    }
+    
+    struct CreatePasswordViewControllerConstants{
+        static let titleLabel = "Fresh start, Fresh password ✨"
     }
 }

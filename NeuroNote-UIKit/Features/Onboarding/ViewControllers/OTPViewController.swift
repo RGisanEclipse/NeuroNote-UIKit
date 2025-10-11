@@ -77,23 +77,9 @@ class OTPViewController: UIViewController {
     }()
     
     // Go Back Button
-    private let goBackButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Back to Login", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont(name: Fonts.MontserratMedium, size:16) ??
-            .systemFont(ofSize: 16, weight: .semibold)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 10
-        button.clipsToBounds = true
-        
-        button.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-        
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
-        
-        return button
-    }()
+    private let goBackButton = ClearButton(
+        title: "Back to Login"
+    )
     // Title
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -198,8 +184,13 @@ class OTPViewController: UIViewController {
                     }
                 }
             case .ForgotPassword:
-                // Navigate to the create password screen
-                Logger.shared.debug("Reached the end of the Forgot Password OTP Flow!")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    let createPasswordVC = CreatePasswordViewController()
+                    createPasswordVC.modalPresentationStyle = .fullScreen
+                    createPasswordVC.modalTransitionStyle = .coverVertical
+                    self.present(createPasswordVC, animated: true, completion: nil)
+                }
             }
         }
         viewModel.onServerError = { [weak self] in
@@ -513,5 +504,5 @@ enum OTPCases{
 }
 
 #Preview{
-    OTPViewController(purpose: OTPPurpose.Signup, requestData: SignupOTPRequest(userId: "random-user-id"))
+    OTPViewController(purpose: OTPPurpose.ForgotPassword, requestData: ForgotPasswordOTPRequest(email: "random@email.com"))
 }

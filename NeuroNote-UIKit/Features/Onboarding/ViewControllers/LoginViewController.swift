@@ -35,7 +35,7 @@ class LoginViewController: UIViewController {
         let animationView = LottieAnimationView(animation: animation)
         animationView.translatesAutoresizingMaskIntoConstraints = false
         animationView.contentMode = .scaleAspectFit
-        animationView.loopMode = .loop
+        animationView.loopMode = .playOnce
         return animationView
     }()
     

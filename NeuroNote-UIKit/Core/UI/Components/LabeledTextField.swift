@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol LabeledTextFieldDelegate: AnyObject {
+    func labeledTextField(_ textField: LabeledTextField, didChangeText text: String)
+}
+
 class LabeledTextField: UIView {
     
     private var isPasswordField: Bool = false
@@ -17,6 +21,8 @@ class LabeledTextField: UIView {
     
     private let horizontalPadding: CGFloat = 20
     private let verticalSpacing: CGFloat = 8
+    
+    weak var delegate: LabeledTextFieldDelegate?
     
     init(placeholder: String, trailingImage: UIImage?) {
         super.init(frame: .zero)
@@ -85,6 +91,7 @@ class LabeledTextField: UIView {
         
         textField.layer.cornerRadius = 8
         textField.clipsToBounds = true
+        textField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     }
     
     private func configureTrailingButton(with image: UIImage) {
@@ -174,6 +181,10 @@ class LabeledTextField: UIView {
             UIImage(systemName: iconName),
             for: .normal
         )
+    }
+    
+    @objc private func textFieldDidChange(_ sender: UITextField) {
+        delegate?.labeledTextField(self, didChangeText: sender.text ?? "")
     }
 }
 
