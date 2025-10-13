@@ -35,7 +35,7 @@ class OTPManager: OTPManagerProtocol {
         do {
             let (data, response) = try await networkService.performRequest(request: request)
             
-            guard response is HTTPURLResponse else {
+            guard let httpResponse = response as? HTTPURLResponse else {
                 throw AuthError.invalidResponse
             }
             
@@ -43,7 +43,15 @@ class OTPManager: OTPManagerProtocol {
             let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
             
             if wrapper.success {
-                return try JSONDecoder().decode(OTPResponse.self, from: data)
+                let otpResponse = try JSONDecoder().decode(OTPResponse.self, from: data)
+                if purpose == .ForgotPassword {
+                    if let headerFields = httpResponse.allHeaderFields as? [String: String] {
+                        let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: httpResponse.url!)
+                        if let userIdCookie = cookies.first(where: { $0.name == Constants.HTTPFields.userId }) {
+                            KeychainHelper.standard.save(userIdCookie.value, forKey: Constants.KeychainHelperKeys.userId)
+                        }
+                    }                }
+                return otpResponse
             } else {
                 let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
                 throw apiErrorResponse.error
@@ -83,17 +91,17 @@ class OTPManager: OTPManagerProtocol {
             guard response is HTTPURLResponse else {
                 throw AuthError.invalidResponse
             }
-
+            
             struct SuccessWrapper: Codable { let success: Bool }
             let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
-
+            
             if wrapper.success {
                 return try JSONDecoder().decode(OTPResponse.self, from: data)
             } else {
                 let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
                 throw apiErrorResponse.error
             }
-
+            
         } catch let networkError as NetworkError {
             throw networkError
         } catch let apiError as APIError {

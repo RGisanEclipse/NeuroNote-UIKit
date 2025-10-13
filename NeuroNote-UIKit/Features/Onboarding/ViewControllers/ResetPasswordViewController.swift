@@ -7,7 +7,11 @@
 
 import UIKit
 import Lottie
-class CreatePasswordViewController: UIViewController {
+
+class ResetPasswordViewController: UIViewController {
+    
+    // MARK: - ViewModel
+    private let viewModel = ResetPasswordViewModel()
 
     private let backgroundImage: UIImageView = {
         let bgImage = UIImageView(image: UIImage(named: Constants.OTPViewControllerConstants.backgroundImageName))
@@ -66,7 +70,9 @@ class CreatePasswordViewController: UIViewController {
     
     // Handle Button
     @objc private func handleSubmitButtonTapped(){
-        // Call to viewmodel to submit the password
+        let password = passwordView.getText() ?? Constants.empty
+        let confirmPassword = confirmPasswordView.getText() ?? Constants.empty
+        viewModel.submitButtonTapped(password: password, confirmPassword: confirmPassword)
     }
     
     // MARK: - Lifecycle
@@ -74,10 +80,68 @@ class CreatePasswordViewController: UIViewController {
         super.viewDidLoad()
         setupHeirarchy()
         setupConstraints()
+        setupViewModelBindings()
         
         passwordAnimationView.play()
         passwordView.delegate = self
         submitButton.addTarget(self, action: #selector(handleSubmitButtonTapped), for: .touchUpInside)
+    }
+    
+    // MARK: - ViewModel Bindings
+    private func setupViewModelBindings() {
+        viewModel.onAsyncStart = {
+            // Probably a loading animation or something
+        }
+        
+        viewModel.onResetSuccess = { [weak self] in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                let banner = OkAlertView(
+                    title: "Password Reset Successful!",
+                    message: "You will be redirected now to sign in with your new password.",
+                    isError: false,
+                    icon: Constants.animations.thumbsUp
+                )
+                banner.translatesAutoresizingMaskIntoConstraints = false
+                self.view.addSubview(banner)
+                NSLayoutConstraint.activate([
+                    banner.topAnchor.constraint(equalTo: self.view.topAnchor),
+                    banner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                    banner.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+                    banner.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+                ])
+                
+                // Navigate back to login after success
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+                    guard let self = self else { return }
+                    let loginVC = LoginViewController()
+                    loginVC.modalPresentationStyle = .fullScreen
+                    self.present(loginVC, animated: true)
+                    
+                }
+            }
+        }
+        
+        viewModel.onMessage = { [weak self] alert in
+            guard let self = self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                let banner = OkAlertView(
+                    title: alert.title,
+                    message: alert.message,
+                    isError: alert.shouldBeRed,
+                    icon: alert.animationName
+                )
+                banner.translatesAutoresizingMaskIntoConstraints = false
+                self.view.addSubview(banner)
+                NSLayoutConstraint.activate([
+                    banner.topAnchor.constraint(equalTo: self.view.topAnchor),
+                    banner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                    banner.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+                    banner.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+                ])
+            }
+        }
     }
     
     func setupHeirarchy(){
@@ -140,7 +204,7 @@ class CreatePasswordViewController: UIViewController {
 }
 
 // MARK: - LabeledTextFieldDelegate
-extension CreatePasswordViewController: LabeledTextFieldDelegate {
+extension ResetPasswordViewController: LabeledTextFieldDelegate {
     func labeledTextField(_ textField: LabeledTextField, didChangeText text: String) {
         if textField === passwordView {
             passwordStrengthView.updateStrength(for: text)
@@ -148,4 +212,4 @@ extension CreatePasswordViewController: LabeledTextFieldDelegate {
     }
 }
 
-#Preview{CreatePasswordViewController()}
+#Preview{ResetPasswordViewController()}

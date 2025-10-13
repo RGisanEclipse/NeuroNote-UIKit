@@ -12,6 +12,7 @@ struct Constants{
     struct HTTPFields{
         static let requestId = "X-Request-Id"
         static let refreshToken = "refreshToken"
+        static let userId = "userId"
     }
     
     struct moodImages{

@@ -14,7 +14,7 @@
 import Foundation
 
 struct PasswordValidator {
-    static func validate(_ password: String, email: String) -> AlertContent? {
+    static func validate(_ password: String) -> AlertContent? {
         let uppercaseRegex = ".*[A-Z]+.*"
         let lowercaseRegex = ".*[a-z]+.*"
         let digitRegex = ".*[0-9]+.*"

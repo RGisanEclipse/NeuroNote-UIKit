@@ -186,7 +186,7 @@ class OTPViewController: UIViewController {
             case .ForgotPassword:
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     guard let self = self else { return }
-                    let createPasswordVC = CreatePasswordViewController()
+                    let createPasswordVC = ResetPasswordViewController()
                     createPasswordVC.modalPresentationStyle = .fullScreen
                     createPasswordVC.modalTransitionStyle = .coverVertical
                     self.present(createPasswordVC, animated: true, completion: nil)

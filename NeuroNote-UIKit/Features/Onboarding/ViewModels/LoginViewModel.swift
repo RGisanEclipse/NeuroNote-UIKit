@@ -7,13 +7,6 @@
 
 import Foundation
 
-struct AlertContent {
-    let title: String
-    let message: String
-    let shouldBeRed: Bool
-    let animationName: String
-}
-
 @MainActor
 class LoginViewModel {
     
@@ -116,7 +109,7 @@ class LoginViewModel {
                 return
             }
             
-            if let validationError = PasswordValidator.validate(password, email: email) {
+            if let validationError = PasswordValidator.validate(password) {
                 onMessage?(validationError)
                 return
             }

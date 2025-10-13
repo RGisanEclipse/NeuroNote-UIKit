@@ -548,8 +548,7 @@ class LoginViewController: UIViewController {
         viewModel.onForgotPasswordOTPSuccess = { [weak self] in
             guard let self = self else { return }
             self.signInButton.setLoading(false)
-            guard let userId = KeychainHelper.standard.getUserID() else { return }
-            let otpVC = OTPViewController(purpose: OTPPurpose.ForgotPassword, requestData: SignupOTPRequest(userId: userId),)
+            let otpVC = OTPViewController(purpose: OTPPurpose.ForgotPassword, requestData: ForgotPasswordOTPRequest(email: emailView.getText() ?? Constants.empty))
             otpVC.modalPresentationStyle = .fullScreen
             otpVC.modalTransitionStyle = .coverVertical
             self.present(otpVC, animated: true)
@@ -559,7 +558,8 @@ class LoginViewController: UIViewController {
             guard let self = self else { return }
             self.hideLoadingOverlay()
             self.signInButton.setLoading(false)
-            let otpVC = OTPViewController(purpose: OTPPurpose.Signup, requestData: ForgotPasswordOTPRequest(email: emailView.getText() ?? Constants.empty))
+            guard let userId = KeychainHelper.standard.getUserID() else { return }
+            let otpVC = OTPViewController(purpose: OTPPurpose.Signup, requestData: SignupOTPRequest(userId: userId),)
             otpVC.modalPresentationStyle = .fullScreen
             otpVC.modalTransitionStyle = .coverVertical
             self.present(otpVC, animated: true)
