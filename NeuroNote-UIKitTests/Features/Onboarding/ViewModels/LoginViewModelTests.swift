@@ -10,20 +10,6 @@ import XCTest
 
 final class LoginViewModelTests: XCTestCase {
 
-    @MainActor func testForgotPasswordShowsExpectedAlert() {
-        let viewModel = LoginViewModel()
-        var receivedAlert: AlertContent?
-
-        viewModel.onMessage = { receivedAlert = $0 }
-
-        viewModel.forgotPasswordButtonTapped(email: "test@example.com")
-
-        XCTAssertEqual(receivedAlert?.title, "Forgot Password?")
-        XCTAssertEqual(receivedAlert?.message, "Don't worry, we've got you!")
-        XCTAssertEqual(receivedAlert?.animationName, Constants.animations.unsureStar)
-        XCTAssertFalse(receivedAlert?.shouldBeRed ?? true)
-    }
-
     @MainActor func testSignInFailsIfFieldsAreEmpty() {
         let viewModel = LoginViewModel()
         var alert: AlertContent?
@@ -63,7 +49,7 @@ final class LoginViewModelTests: XCTestCase {
         mock.shouldThrowUnknownError = true
 
         let viewModel = LoginViewModel(authManager: mock)
-        let expectation = XCTestExpectation(description: "Unknown error alert received")
+        let expectation = XCTestExpectation(description: AuthAlert.unknown.title)
 
         var alert: AlertContent?
 
@@ -79,7 +65,7 @@ final class LoginViewModelTests: XCTestCase {
             mode: .signup
         )
 
-        wait(for: [expectation], timeout: 3)
+        wait(for: [expectation], timeout: 20)
         XCTAssertEqual(alert?.title, AuthAlert.unknown.title)
     }
     

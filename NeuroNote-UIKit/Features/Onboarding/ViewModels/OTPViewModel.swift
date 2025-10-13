@@ -74,14 +74,14 @@ class OTPViewModel {
     
     // MARK: - Resend OTP
     @MainActor
-    func resendOTP(userId: String, purpose: OTPPurpose) {
+    func resendOTP(requestData: OTPRequestData, purpose: OTPPurpose) {
         onAsyncStart?()
         
         Task {
             defer { onAsyncEnd?() }
             
             do {
-                _ = try await otpManager.requestOTP(userId: userId, purpose: purpose)
+                _ = try await otpManager.requestOTP(requestData: requestData, purpose: purpose)
                 startResendTimer()
             } catch _ as APIError {
                 onServerError?()

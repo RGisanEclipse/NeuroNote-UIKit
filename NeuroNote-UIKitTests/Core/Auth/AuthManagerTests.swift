@@ -8,7 +8,7 @@ import XCTest
 @testable import NeuroNote_UIKit
 
 final class AuthManagerTests: XCTestCase {
-    
+    var mockAuthManager = MockAuthManager()
     override func setUp() {
         super.setUp()
         KeychainHelper.standard.clearTestKeys()
@@ -238,6 +238,307 @@ final class AuthManagerTests: XCTestCase {
             guard case .generic(_) = error as? NetworkError else {
                 return XCTFail("Expected .generic NetworkError")
             }
+        }
+    }
+    
+    // MARK: - Successful Reset Password Tests
+    
+    func testResetPasswordSuccess() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user_123", password: "NewPassword123!")
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertTrue(result)
+        } catch {
+            XCTFail("Reset password should succeed: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithDifferentUserIds() async {
+        // Given
+        let userIds = ["user1", "user2", "user3@domain.com", "user_123"]
+        
+        for userId in userIds {
+            let request = ResetPasswordRequest(userId: userId, password: "NewPassword123!")
+            mockAuthManager.resetPasswordShouldSucceed = true
+            
+            // When
+            do {
+                let result = try await mockAuthManager.resetPassword(payload: request)
+                
+                // Then
+                XCTAssertTrue(result, "Reset password should succeed for userId: \(userId)")
+            } catch {
+                XCTFail("Reset password should succeed for userId: \(userId), error: \(error)")
+            }
+        }
+    }
+    
+    func testResetPasswordWithDifferentPasswords() async {
+        // Given
+        let passwords = [
+            "SimplePass123!",
+            "ComplexP@ssw0rd!@#",
+            "VeryLongPassword123!@#$%^&*()",
+            "Unicode密码123!"
+        ]
+        
+        for password in passwords {
+            let request = ResetPasswordRequest(userId: "test_user", password: password)
+            mockAuthManager.resetPasswordShouldSucceed = true
+            
+            // When
+            do {
+                let result = try await mockAuthManager.resetPassword(payload: request)
+                
+                // Then
+                XCTAssertTrue(result, "Reset password should succeed for password: \(password)")
+            } catch {
+                XCTFail("Reset password should succeed for password: \(password), error: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Network Error Tests
+    
+    func testResetPasswordWithNoInternetError() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.shouldThrowNetworkError = true
+        
+        // When & Then
+        do {
+            _ = try await mockAuthManager.resetPassword(payload: request)
+            XCTFail("Should throw network error")
+        } catch let error as NetworkError {
+            XCTAssertEqual(error, .noInternet)
+        } catch {
+            XCTFail("Should throw NetworkError.noInternet, got: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithTimeoutError() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.shouldThrowNetworkError = true
+        mockAuthManager.resetPasswordDelay = 0.1
+        
+        // When & Then
+        do {
+            _ = try await mockAuthManager.resetPassword(payload: request)
+            XCTFail("Should throw network error")
+        } catch let error as NetworkError {
+            XCTAssertEqual(error, .noInternet)
+        } catch {
+            XCTFail("Should throw NetworkError, got: \(error)")
+        }
+    }
+    
+    // MARK: - API Error Tests
+    
+    func testResetPasswordWithAPIError() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.shouldThrowAPIError = true
+        
+        // When & Then
+        do {
+            _ = try await mockAuthManager.resetPassword(payload: request)
+            XCTFail("Should throw API error")
+        } catch let error as APIError {
+            XCTAssertEqual(error.message, "Internal Server Error")
+        } catch {
+            XCTFail("Should throw APIError, got: \(error)")
+        }
+    }
+    
+    // MARK: - Server Error Tests
+    
+    func testResetPasswordWithServerError() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.shouldThrowServerError = true
+        mockAuthManager.serverMessageToThrow = .internalServerError
+        
+        // When & Then
+        do {
+            _ = try await mockAuthManager.resetPassword(payload: request)
+            XCTFail("Should throw server error")
+        } catch let error as AuthError {
+            if case .server(let code) = error {
+                XCTAssertEqual(code, .internalServerError)
+            } else {
+                XCTFail("Should throw AuthError.server, got: \(error)")
+            }
+        } catch {
+            XCTFail("Should throw AuthError, got: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithDifferentServerErrors() async {
+        // Given
+        let serverCodes: [AuthServerCode] = [
+            .internalServerError,
+            .unauthorized,
+        ]
+        
+        for serverCode in serverCodes {
+            let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+            mockAuthManager.shouldThrowServerError = true
+            mockAuthManager.serverMessageToThrow = serverCode
+            
+            // When & Then
+            do {
+                _ = try await mockAuthManager.resetPassword(payload: request)
+                XCTFail("Should throw server error for code: \(serverCode)")
+            } catch let error as AuthError {
+                if case .server(let code) = error {
+                    XCTAssertEqual(code, serverCode)
+                } else {
+                    XCTFail("Should throw AuthError.server for code: \(serverCode), got: \(error)")
+                }
+            } catch {
+                XCTFail("Should throw AuthError for code: \(serverCode), got: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Reset Password Failure Tests
+    
+    func testResetPasswordFailure() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.resetPasswordShouldSucceed = false
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertFalse(result)
+        } catch {
+            XCTFail("Should not throw error when resetPasswordShouldSucceed is false: \(error)")
+        }
+    }
+    
+    // MARK: - Edge Cases
+    
+    func testResetPasswordWithEmptyUserId() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "", password: "NewPassword123!")
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertTrue(result)
+        } catch {
+            XCTFail("Reset password should succeed with empty userId: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithEmptyPassword() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "")
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertTrue(result)
+        } catch {
+            XCTFail("Reset password should succeed with empty password: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithSpecialCharacters() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "user@domain.com", password: "P@ssw0rd!@#$%^&*()")
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertTrue(result)
+        } catch {
+            XCTFail("Reset password should succeed with special characters: \(error)")
+        }
+    }
+    
+    func testResetPasswordWithUnicodeCharacters() async {
+        // Given
+        let request = ResetPasswordRequest(userId: "用户123", password: "密码123!")
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        do {
+            let result = try await mockAuthManager.resetPassword(payload: request)
+            
+            // Then
+            XCTAssertTrue(result)
+        } catch {
+            XCTFail("Reset password should succeed with unicode characters: \(error)")
+        }
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testResetPasswordPerformance() {
+        // Given
+        let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
+        mockAuthManager.resetPasswordDelay = 0.01 // Very fast for performance testing
+        
+        // When & Then
+        measure {
+            let expectation = XCTestExpectation(description: "Reset password performance")
+            
+            Task {
+                do {
+                    _ = try await mockAuthManager.resetPassword(payload: request)
+                    expectation.fulfill()
+                } catch {
+                    XCTFail("Performance test should not fail: \(error)")
+                }
+            }
+            
+            wait(for: [expectation], timeout: 1.0)
+        }
+    }
+    
+    // MARK: - Concurrent Tests
+    
+    func testConcurrentResetPasswordRequests() async {
+        // Given
+        let request1 = ResetPasswordRequest(userId: "user1", password: "Password1!")
+        let request2 = ResetPasswordRequest(userId: "user2", password: "Password2!")
+        let request3 = ResetPasswordRequest(userId: "user3", password: "Password3!")
+        
+        mockAuthManager.resetPasswordShouldSucceed = true
+        
+        // When
+        async let result1 = mockAuthManager.resetPassword(payload: request1)
+        async let result2 = mockAuthManager.resetPassword(payload: request2)
+        async let result3 = mockAuthManager.resetPassword(payload: request3)
+        
+        // Then
+        do {
+            let (success1, success2, success3) = try await (result1, result2, result3)
+            XCTAssertTrue(success1)
+            XCTAssertTrue(success2)
+            XCTAssertTrue(success3)
+        } catch {
+            XCTFail("Concurrent reset password requests should succeed: \(error)")
         }
     }
 }

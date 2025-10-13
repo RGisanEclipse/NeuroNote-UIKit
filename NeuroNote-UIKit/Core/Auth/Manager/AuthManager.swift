@@ -7,14 +7,6 @@
 
 import Foundation
 
-protocol AuthManagerProtocol {
-    func authenticate(
-        email: String,
-        password: String,
-        mode: AuthManager.Mode
-    ) async throws -> AuthSession
-}
-
 class AuthManager: AuthManagerProtocol {
     
     static let shared = AuthManager()
@@ -105,6 +97,65 @@ class AuthManager: AuthManagerProtocol {
                 throw apiErrorResponse.error
             }
 
+        } catch let error as URLError {
+            switch error.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                throw NetworkError.noInternet
+            case .cannotFindHost, .cannotConnectToHost:
+                throw NetworkError.cannotReachServer
+            case .timedOut:
+                throw NetworkError.timeout
+            default:
+                throw NetworkError.generic(message: error.localizedDescription)
+            }
+        } catch let apiError as APIError {
+            throw apiError
+        } catch {
+            throw AuthError.unexpectedError
+        }
+    }
+    
+    func resetPassword(payload: ResetPasswordRequest) async throws -> Bool {
+        
+        guard let url = URL(string: Routes.base + Routes.resetPassword) else {
+            throw AuthError.badURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(ResetPasswordRequest(userId: payload.userId,
+                                                                         password: payload.password))
+        request.timeoutInterval = 10
+        
+        do{
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AuthError.invalidResponse
+            }
+
+            let bodyString = String(data: data, encoding: .utf8) ?? "<Unable to decode body>"
+            Logger.shared.debug("Authentication Response", fields: [
+                "statusCode": httpResponse.statusCode,
+                "body": bodyString,
+                "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+            ])
+            struct SuccessWrapper: Codable { let success: Bool }
+            let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
+            
+            if wrapper.success{
+                return true
+            } else{
+                let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
+                Logger.shared.error("API Error Response", fields: [
+                    "code": apiErrorResponse.error.code,
+                    "message": apiErrorResponse.error.message,
+                    "status": apiErrorResponse.error.status,
+                    "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? Constants.empty
+                ])
+                throw apiErrorResponse.error
+            }
+            
         } catch let error as URLError {
             switch error.code {
             case .notConnectedToInternet, .networkConnectionLost:
