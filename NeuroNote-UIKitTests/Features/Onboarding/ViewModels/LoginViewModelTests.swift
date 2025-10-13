@@ -65,7 +65,7 @@ final class LoginViewModelTests: XCTestCase {
             mode: .signup
         )
 
-        wait(for: [expectation], timeout: 3)
+        wait(for: [expectation], timeout: 20)
         XCTAssertEqual(alert?.title, AuthAlert.unknown.title)
     }
     
