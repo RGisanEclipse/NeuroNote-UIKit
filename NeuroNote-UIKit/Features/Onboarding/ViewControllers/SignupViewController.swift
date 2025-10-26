@@ -235,7 +235,7 @@ class SignupViewController: UIViewController {
         animationView.addGestureRecognizer(tapGesture)
         animationView.tag = 1
         animationView.isUserInteractionEnabled = true
-
+        
         return animationView
     }()
     
@@ -415,7 +415,7 @@ class SignupViewController: UIViewController {
     @objc private func ageSliderChanged() {
         let age = Int(ageSlider.value)
         ageLabel.text = "Age: \(age)"
-                UIView.animate(withDuration: 0.2, animations: {
+        UIView.animate(withDuration: 0.2, animations: {
             self.ageLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
         }) { _ in
             UIView.animate(withDuration: 0.2) {
@@ -466,13 +466,23 @@ class SignupViewController: UIViewController {
         guard let animationView = sender.view as? LottieAnimationView else { return }
         selectedGender = animationView.tag
         
+        UIView.animate(withDuration: 0.1, animations: {
+            animationView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }) { _ in
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: [.curveEaseInOut], animations: {
+                animationView.transform = .identity
+            })
+        }
+        
         maleButton.stop()
         femaleButton.stop()
         
         if animationView.tag == 0 {
-            maleButton.play()
             maleButton.alpha = 1
             femaleButton.alpha = 0.65
+            DispatchQueue.main.async{ [weak self] in
+                self?.maleButton.play()
+            }
         } else {
             femaleButton.play()
             femaleButton.alpha = 1
@@ -488,39 +498,36 @@ class SignupViewController: UIViewController {
             self.maleButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
             self.femaleButton.alpha = 0
             self.femaleButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
+            self.genderTitleLabel.alpha = 0
+            self.genderTitleLabel.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
+            self.backButton.alpha = 0
+            self.backButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
+            self.submitButton.alpha = 0
+            self.submitButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
+            
+            // Slide name/age content back to center
+            self.titleLabel.transform = .identity
+            self.nameFieldContainer.transform = .identity
+            self.nameTextField.transform = .identity
+            self.ageSliderTitleLabel.transform = .identity
+            self.ageSliderContainer.transform = .identity
+            self.ageSlider.transform = .identity
+            self.ageLabel.transform = .identity
+            
+            self.titleLabel.text = "Let's get started!"
+            self.continueButton.isHidden = false
+            
         }) { _ in
-            UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: {
-                self.genderTitleLabel.alpha = 0
-                self.genderTitleLabel.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
-                self.backButton.alpha = 0
-                self.backButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
-                self.submitButton.alpha = 0
-                self.submitButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
-                
-                // Slide name/age content back to center
-                self.titleLabel.transform = .identity
-                self.nameFieldContainer.transform = .identity
-                self.nameTextField.transform = .identity
-                self.ageSliderTitleLabel.transform = .identity
-                self.ageSliderContainer.transform = .identity
-                self.ageSlider.transform = .identity
-                self.ageLabel.transform = .identity
-                
-                self.titleLabel.text = "Let's get started!"
-                self.continueButton.isHidden = false
-                
-            }) { _ in
-                self.genderTitleLabel.isHidden = true
-                self.femaleButton.isHidden = true
-                self.maleButton.isHidden = true
-                self.backButton.isHidden = true
-                self.submitButton.isHidden = true
-            }
+            self.genderTitleLabel.isHidden = true
+            self.femaleButton.isHidden = true
+            self.maleButton.isHidden = true
+            self.backButton.isHidden = true
+            self.submitButton.isHidden = true
         }
     }
     
     @objc private func submitButtonTapped() {
-            // View Model to be called
+        // View Model to be called
     }
     
 }
