@@ -73,6 +73,7 @@ class ResetPasswordViewController: UIViewController {
         let password = passwordView.getText() ?? Constants.empty
         let confirmPassword = confirmPasswordView.getText() ?? Constants.empty
         viewModel.submitButtonTapped(password: password, confirmPassword: confirmPassword)
+        
     }
     
     // MARK: - Lifecycle
@@ -89,12 +90,14 @@ class ResetPasswordViewController: UIViewController {
     
     // MARK: - ViewModel Bindings
     private func setupViewModelBindings() {
-        viewModel.onAsyncStart = {
-            // Probably a loading animation or something
+        viewModel.onAsyncStart = { [weak self] in
+            self?.submitButton.setLoading(true)
         }
         
         viewModel.onResetSuccess = { [weak self] in
             guard let self = self else { return }
+            
+            self.submitButton.setLoading(false)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 let banner = OkAlertView(
@@ -125,6 +128,9 @@ class ResetPasswordViewController: UIViewController {
         
         viewModel.onMessage = { [weak self] alert in
             guard let self = self else { return }
+            
+            self.submitButton.setLoading(false)
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 let banner = OkAlertView(
                     title: alert.title,
