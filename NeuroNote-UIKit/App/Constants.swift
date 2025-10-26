@@ -37,6 +37,8 @@ struct Constants{
         static let plane = "plane"
         static let otpChair = "otp-chair"
         static let phonePassword = "phone-password"
+        static let maleAvatar = "male-avatar"
+        static let femaleAvatar = "female-avatar"
     }
     struct LaunchScreenConstants{
         
