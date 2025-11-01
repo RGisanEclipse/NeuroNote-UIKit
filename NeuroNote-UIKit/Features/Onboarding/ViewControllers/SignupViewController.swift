@@ -385,7 +385,8 @@ class SignupViewController: UIViewController {
             usingSpringWithDamping: 0.7,
             initialSpringVelocity: 0.5,
             options: [.curveEaseOut],
-            animations: {
+            animations: { [weak self] in
+                guard let self = self else { return }
                 // Title label
                 self.titleLabel.alpha = 1.0
                 self.titleLabel.transform = .identity
@@ -418,9 +419,11 @@ class SignupViewController: UIViewController {
     @objc private func ageSliderChanged() {
         let age = Int(ageSlider.value)
         ageLabel.text = "Age: \(age)"
-        UIView.animate(withDuration: 0.2, animations: {
+        UIView.animate(withDuration: 0.2, animations: { [weak self] in
+            guard let self = self else { return }
             self.ageLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-        }) { _ in
+        }) { [weak self] _ in
+            guard let self = self else { return }
             UIView.animate(withDuration: 0.2) {
                 self.ageLabel.transform = .identity
             }
@@ -471,7 +474,8 @@ class SignupViewController: UIViewController {
     @objc private func backButtonTapped() {
         self.nameFieldContainer.isHidden = false
         
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: {
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: { [weak self] in
+            guard let self = self else { return }
             self.maleButton.alpha = 0
             self.maleButton.transform = CGAffineTransform(translationX: self.view.bounds.width, y: 0)
             self.femaleButton.alpha = 0
@@ -495,7 +499,8 @@ class SignupViewController: UIViewController {
             self.titleLabel.text = "Let's get started!"
             self.continueButton.isHidden = false
             
-        }) { _ in
+        }) { [weak self] _ in
+            guard let self = self else { return }
             self.genderTitleLabel.isHidden = true
             self.femaleButton.isHidden = true
             self.maleButton.isHidden = true
@@ -528,7 +533,8 @@ class SignupViewController: UIViewController {
         
         self.titleLabel.text = "One last question"
         
-        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: {
+        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: { [weak self] in
+            guard let self = self else { return }
             self.nameFieldContainer.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
             self.nameTextField.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
             self.ageSliderTitleLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
@@ -563,7 +569,8 @@ class SignupViewController: UIViewController {
             self.continueButton.isHidden = true
             self.nameFieldContainer.isHidden = true
             
-        }) { _ in
+        }) { [weak self] _ in
+            guard let self = self else { return }
             if let selectedGender = self.selectedGender {
                 self.maleButton.stop()
                 self.femaleButton.stop()
@@ -624,14 +631,16 @@ extension SignupViewController: UITextFieldDelegate {
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: 0.3) { [weak self] in
+            guard let self = self else { return }
             self.nameFieldContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.6).cgColor
             self.nameFieldContainer.transform = CGAffineTransform(scaleX: 1.02, y: 1.02)
         }
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: 0.3) { [weak self] in
+            guard let self = self else { return }
             self.nameFieldContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
             self.nameFieldContainer.transform = .identity
         }

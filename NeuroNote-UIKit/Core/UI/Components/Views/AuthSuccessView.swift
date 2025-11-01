@@ -129,14 +129,16 @@ class AuthSuccessView: UIView {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + durationToFrame) { [weak self] in
             guard let self = self else { return }
-            UIView.animate(withDuration: 0.3) {
+            UIView.animate(withDuration: 0.3) { [weak self] in
+                guard let self = self else { return }
                 self.backgroundColor = UIColor(red: 0.0, green: 0.52, blue: 0.31, alpha: 1.0)
             }
             UIView.animate(
                     withDuration: 0.6,
                     delay: 0.15,
                     options: [.curveEaseOut],
-                    animations: {
+                    animations: { [weak self] in
+                        guard let self = self else { return }
                         self.messageLabel.alpha = 1
                         self.messageLabel.transform = CGAffineTransform(translationX: 0, y: -8)
                     },
@@ -147,7 +149,8 @@ class AuthSuccessView: UIView {
 
     // MARK: - Dismiss Logic
     func dismiss() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             UIView.animate(
                 withDuration: 0.8,
@@ -155,12 +158,13 @@ class AuthSuccessView: UIView {
                 usingSpringWithDamping: 1,
                 initialSpringVelocity: 0.5,
                 options: [.curveEaseIn],
-                animations: {
+                animations: { [weak self] in
+                    guard let self = self else { return }
                     self.transform = CGAffineTransform(translationX: 0, y: -self.frame.height)
                     self.alpha = 0
                 },
-                completion: { _ in
-                    self.removeFromSuperview()
+                completion: { [weak self] _ in
+                    self?.removeFromSuperview()
                 }
             )
         }

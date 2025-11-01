@@ -162,9 +162,10 @@ class LoadingOverlayView: UIView {
             UIView.animate(withDuration: 0.5,
                            delay: 0.1,
                            usingSpringWithDamping: 0.8,
-                           initialSpringVelocity: 0.5) {
-                self?.animationView.alpha = 1
-                self?.animationView.transform = .identity
+                           initialSpringVelocity: 0.5) { [weak self] in
+                guard let self = self else { return }
+                self.animationView.alpha = 1
+                self.animationView.transform = .identity
             }
         }
     }
@@ -179,16 +180,19 @@ class LoadingOverlayView: UIView {
     }
 
     private func updateMessage() {
-        UIView.animate(withDuration: 0.3, animations: {
+        UIView.animate(withDuration: 0.3, animations: { [weak self] in
+            guard let self = self else { return }
             self.messageLabel.transform = CGAffineTransform(translationX: 0, y: -10)
             self.messageLabel.alpha = 0
-        }) { _ in
+        }) { [weak self] _ in
+            guard let self = self else { return }
             self.messageLabel.text = self.messages[self.currentMessageIndex]
             self.currentMessageIndex = (self.currentMessageIndex + 1) % self.messages.count
             
             self.messageLabel.transform = CGAffineTransform(translationX: 0, y: 10)
             
-            UIView.animate(withDuration: 0.3) {
+            UIView.animate(withDuration: 0.3) { [weak self] in
+                guard let self = self else { return }
                 self.messageLabel.transform = .identity
                 self.messageLabel.alpha = 1
             }
@@ -209,13 +213,14 @@ class LoadingOverlayView: UIView {
             usingSpringWithDamping: 1,
             initialSpringVelocity: 0.5,
             options: [.curveEaseIn],
-            animations: {
+            animations: { [weak self] in
+                guard let self = self else { return }
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 self.transform = CGAffineTransform(translationX: 0, y: -self.frame.height)
                 self.alpha = 0
             },
-            completion: { _ in
-                self.removeFromSuperview()
+            completion: { [weak self] _ in
+                self?.removeFromSuperview()
             }
         )
     }

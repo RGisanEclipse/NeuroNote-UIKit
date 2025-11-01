@@ -464,11 +464,13 @@ class LoginViewController: UIViewController {
     @objc private func toggleModeTapped() {
         view.endEditing(true)
         toggleModeButton.isUserInteractionEnabled = false
-        UIView.animate(withDuration: 0.25, animations: {
+        UIView.animate(withDuration: 0.25, animations: { [weak self] in
+            guard let self = self else { return }
             self.glassCard.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
             self.celestialAnimationView.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
             self.glassCard.alpha = 0.3
-        }) { _ in
+        }) { [weak self] _ in
+            guard let self = self else { return }
             self.mode = self.mode == .login ? .signup : .login
             [self.emailView,
              self.passwordView,
@@ -478,7 +480,8 @@ class LoginViewController: UIViewController {
             UIView.animate(withDuration: 0.45,
                            delay: 0.05,
                            usingSpringWithDamping: 0.8,
-                           initialSpringVelocity: 0.4) {
+                           initialSpringVelocity: 0.4) { [weak self] in
+                guard let self = self else { return }
                 self.glassCard.transform = .identity
                 self.glassCard.alpha = 1
                 self.celestialAnimationView.transform = .identity

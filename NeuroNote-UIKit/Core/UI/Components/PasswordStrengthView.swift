@@ -88,7 +88,8 @@ class PasswordStrengthView: UIView {
         let totalWidth = strengthBarBackground.bounds.width
         let targetWidth = totalWidth * strength.fillPercentage
         
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: 0.3) { [weak self] in
+            guard let self = self else { return }
             self.fillWidthConstraint.constant = targetWidth
             self.layoutIfNeeded()
         }
