@@ -92,6 +92,8 @@ class SignupViewController: UIViewController {
         return container
     }()
     
+    private var hasConfirmedDefaultAge = false
+    
     private lazy var ageSlider: UISlider = {
         let slider = UISlider()
         slider.translatesAutoresizingMaskIntoConstraints = false
@@ -368,7 +370,8 @@ class SignupViewController: UIViewController {
     }
     
     private func setupCircularButtons() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.maleButton.layer.cornerRadius = self.maleButton.frame.width / 2
             self.femaleButton.layer.cornerRadius = self.femaleButton.frame.width / 2
         }
@@ -425,41 +428,16 @@ class SignupViewController: UIViewController {
     }
     
     @objc private func continueButtonTapped() {
-        self.genderTitleLabel.isHidden = false
-        self.femaleButton.isHidden = false
-        self.maleButton.isHidden = false
-        self.backButton.isHidden = false
-        self.submitButton.isHidden = false
-        
-        self.titleLabel.text = "One last question"
-        
-        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: {
-            self.nameFieldContainer.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            self.nameTextField.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            self.ageSliderTitleLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            self.ageSliderContainer.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            self.ageSlider.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            self.ageLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
-            
-            self.titleLabel.transform = .identity
-            self.genderTitleLabel.alpha = 1.0
-            self.genderTitleLabel.transform = .identity
-            self.backButton.alpha = 1.0
-            self.backButton.transform = .identity
-            self.submitButton.alpha = 1.0
-            self.submitButton.transform = .identity
-            self.maleButton.alpha = 1.0
-            self.maleButton.transform = .identity
-            self.femaleButton.alpha = 1.0
-            self.femaleButton.transform = .identity
-            
-            self.continueButton.isHidden = true
-            self.nameFieldContainer.isHidden = true
-            
-        }) { _ in
-            self.maleButton.stop()
-            self.femaleButton.stop()
+        guard let name = nameTextField.text, !name.isEmpty else {
+            showEmptyFieldsAlert()
+            return
         }
+        let age = Int(ageSlider.value)
+        if age == 21 && !hasConfirmedDefaultAge {
+            showAgeConfirmationAlert()
+            return
+        }
+        showGenderSelection()
     }
     
     @objc private func genderButtonTapped(_ sender: UITapGestureRecognizer) {
@@ -527,9 +505,116 @@ class SignupViewController: UIViewController {
     }
     
     @objc private func submitButtonTapped() {
+        if self.selectedGender == nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){ [weak self] in
+                let banner = OkAlertView(
+                    title: SignupAlerts.emptyGender.title,
+                    message: SignupAlerts.emptyGender.message,
+                    isError: SignupAlerts.emptyGender.shouldBeRed,
+                    icon: SignupAlerts.emptyGender.animationName
+                )
+                self?.displayOkAlertView(banner: banner)
+            }
+        }
         // View Model to be called
     }
     
+    private func showGenderSelection(){
+        self.genderTitleLabel.isHidden = false
+        self.femaleButton.isHidden = false
+        self.maleButton.isHidden = false
+        self.backButton.isHidden = false
+        self.submitButton.isHidden = false
+        
+        self.titleLabel.text = "One last question"
+        
+        UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut], animations: {
+            self.nameFieldContainer.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            self.nameTextField.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            self.ageSliderTitleLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            self.ageSliderContainer.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            self.ageSlider.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            self.ageLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width, y: 0)
+            
+            self.titleLabel.transform = .identity
+            self.genderTitleLabel.alpha = 1.0
+            self.genderTitleLabel.transform = .identity
+            self.backButton.alpha = 1.0
+            self.backButton.transform = .identity
+            self.submitButton.alpha = 1.0
+            self.submitButton.transform = .identity
+            
+            if let selectedGender = self.selectedGender {
+                if selectedGender == 0 {
+                    self.maleButton.alpha = 1.0
+                    self.femaleButton.alpha = 0.65
+                } else {
+                    self.femaleButton.alpha = 1.0
+                    self.maleButton.alpha = 0.65
+                }
+            } else {
+                self.maleButton.alpha = 0.5
+                self.femaleButton.alpha = 0.5
+            }
+            
+            self.maleButton.transform = .identity
+            self.femaleButton.transform = .identity
+            
+            self.continueButton.isHidden = true
+            self.nameFieldContainer.isHidden = true
+            
+        }) { _ in
+            if let selectedGender = self.selectedGender {
+                self.maleButton.stop()
+                self.femaleButton.stop()
+                if selectedGender == 0 {
+                    self.maleButton.play()
+                } else {
+                    self.femaleButton.play()
+                }
+            } else {
+                self.maleButton.stop()
+                self.femaleButton.stop()
+            }
+        }
+    }
+    private func showEmptyFieldsAlert(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            let banner = OkAlertView(
+                title: AuthAlert.fieldsMissing.title,
+                message: AuthAlert.fieldsMissing.message,
+                isError: AuthAlert.fieldsMissing.shouldBeRed,
+                icon: AuthAlert.fieldsMissing.animationName
+            )
+            self.displayOkAlertView(banner: banner)
+        }
+    }
+    
+    private func showAgeConfirmationAlert(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){ [weak self] in
+            guard let self = self else { return }
+            let banner = OkAlertView(
+                title: SignupAlerts.confirmAge.title,
+                message: SignupAlerts.confirmAge.message,
+                isError: SignupAlerts.confirmAge.shouldBeRed,
+                icon: SignupAlerts.confirmAge.animationName
+            )
+            self.displayOkAlertView(banner: banner)
+            self.hasConfirmedDefaultAge = true
+        }
+    }
+    
+    private func displayOkAlertView(banner: OkAlertView){
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(banner)
+        NSLayoutConstraint.activate([
+            banner.topAnchor.constraint(equalTo: self.view.topAnchor),
+            banner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+            banner.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            banner.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+        ])
+    }
 }
 
 extension SignupViewController: UITextFieldDelegate {
