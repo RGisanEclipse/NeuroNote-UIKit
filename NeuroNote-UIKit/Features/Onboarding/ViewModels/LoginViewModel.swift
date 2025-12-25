@@ -10,11 +10,12 @@ import Foundation
 @MainActor
 class LoginViewModel {
     
-    var onMessage: ((AlertContent) -> Void)?
-    var onAsyncStart: (() -> Void)?
-    var onSigninSuccess: (() -> Void)?
+    var onMessage:                  ((AlertContent) -> Void)?
+    var onAsyncStart:               (() -> Void)?
+    var onSigninSuccess:            ((Bool) -> Void)?
     var onForgotPasswordOTPSuccess: (() -> Void)?
-    var onOTPRequired: (() -> Void)?
+    var onOTPRequired:              (() -> Void)?
+    var onOnboardingRequired:       (() -> Void)?
     
     private let authManager: AuthManagerProtocol
     private let otpManager: OTPManagerProtocol
@@ -93,9 +94,16 @@ class LoginViewModel {
                 )
                 
                 if session.isVerified {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.onSigninSuccess?()
+                    if session.isOnboarded {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            self.onSigninSuccess?(true)
+                        }
+                    } else{
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            self.onSigninSuccess?(false)
+                        }
                     }
+                    
                 } else {
                     guard let userId = KeychainHelper.standard.getUserID() else {
                         Logger.shared.error("User Id not found in Keychain")

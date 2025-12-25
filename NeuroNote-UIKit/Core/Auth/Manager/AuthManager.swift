@@ -59,6 +59,7 @@ final class AuthManager: AuthManagerProtocol {
             let payload = apiResponse.response
             let token = payload.token
             let isVerified = payload.isVerified
+            let isOnboarded = payload.isOnboarded
 
             extractRefreshToken(from: httpResponse)
 
@@ -78,7 +79,8 @@ final class AuthManager: AuthManagerProtocol {
             return AuthSession(
                 token: token,
                 refreshToken: KeychainHelper.standard.getRefreshToken() ?? "",
-                isVerified: isVerified
+                isVerified: isVerified,
+                isOnboarded: isOnboarded
             )
 
         } catch let error as URLError {

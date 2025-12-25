@@ -53,14 +53,15 @@ final class AuthManagerTests: XCTestCase {
     }
     
     /// Creates a success response matching the backend API structure
-    private func makeSuccessAuthResponse(token: String, isVerified: Bool) -> Data {
+    private func makeSuccessAuthResponse(token: String, isVerified: Bool, isOnboarded: Bool = true) -> Data {
         let jsonString = """
         {
             "success": true,
             "status": 200,
             "response": {
                 "token": "\(token)",
-                "isVerified": \(isVerified)
+                "isVerified": \(isVerified),
+                "isOnboarded": \(isOnboarded)
             }
         }
         """

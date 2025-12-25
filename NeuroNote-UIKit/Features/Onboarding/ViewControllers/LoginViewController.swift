@@ -523,29 +523,23 @@ class LoginViewController: UIViewController {
             }
         }
 
-        viewModel.onSigninSuccess = { [weak self] in
+        viewModel.onSigninSuccess = { [weak self] isOnboarded in
             guard let self = self else { return }
             self.signInButton.setLoading(false)
             self.updateSignInButtonTitle()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                let banner = OkAlertView(
-                    title: AuthAlert.signinSuccess.title,
-                    message: AuthAlert.signinSuccess.message,
-                    isError: AuthAlert.signinSuccess.shouldBeRed,
-                    icon: AuthAlert.signinSuccess.animationName
-                )
-                banner.translatesAutoresizingMaskIntoConstraints = false
-                self.view.addSubview(banner)
-                NSLayoutConstraint.activate([
-                    banner.topAnchor.constraint(equalTo: self.view.topAnchor),
-                    banner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-                    banner.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-                    banner.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-                ])
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if isOnboarded {
+                    // TODO: Navigate to dashboard
+                    
+                } else {
+                    // TODO: Navigate to onboarding
+                    let onboardingVC = OnboardingViewController()
+                    onboardingVC.modalPresentationStyle = .fullScreen
+                    onboardingVC.modalTransitionStyle = .coverVertical
+                    self.present(onboardingVC, animated: true)
+                }
             }
-
-            self.hideLoadingOverlay()
         }
         
         viewModel.onForgotPasswordOTPSuccess = { [weak self] in

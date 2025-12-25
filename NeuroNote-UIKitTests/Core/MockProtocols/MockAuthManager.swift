@@ -27,7 +27,7 @@ class MockAuthManager: AuthManagerProtocol {
             throw NSError(domain: "Test", code: -1, userInfo: nil)
         }
         
-        return AuthSession(token: "mock_user_token_123", refreshToken: "random_refresh_token", isVerified: true)
+        return AuthSession(token: "mock_user_token_123", refreshToken: "random_refresh_token", isVerified: true, isOnboarded: true)
     }
     
     func resetPassword(payload: ResetPasswordRequest) async throws -> Bool {

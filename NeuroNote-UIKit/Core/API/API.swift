@@ -216,6 +216,7 @@ extension ServerErrorCode {
 struct AuthResponseData: Decodable {
     let token: String
     let isVerified: Bool
+    let isOnboarded: Bool
 }
 
 struct TokenRefreshData: Decodable {
