@@ -10,6 +10,9 @@ import Lottie
 
 class OnboardingViewController: UIViewController {
     
+    // MARK: - ViewModel
+    private let viewModel = OnboardingViewModel()
+    
     // MARK: - Lottie
     private lazy var backgroundAnimationView: LottieAnimationView = {
         let animation = LottieAnimation.named(getCurrentBackgroundAnimationName())
@@ -254,7 +257,38 @@ class OnboardingViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         setupConstraints()
+        setupViewModelBindings()
         registerTraitChanges()
+    }
+    
+    // MARK: - ViewModel Bindings
+    private func setupViewModelBindings() {
+        viewModel.onAsyncStart = { [weak self] in
+            guard let self = self else { return }
+            self.submitButton.setLoading(true)
+        }
+        
+        viewModel.onAsyncEnd = { [weak self] in
+            guard let self = self else { return }
+            self.submitButton.setLoading(false)
+        }
+        
+        viewModel.onOnboardingSuccess = { [weak self] in
+            guard let self = self else { return }
+            // TODO: Navigate to dashboard/home
+            self.dismiss(animated: true)
+        }
+        
+        viewModel.onMessage = { [weak self] alert in
+            guard let self = self else { return }
+            let banner = OkAlertView(
+                title: alert.title,
+                message: alert.message,
+                isError: alert.shouldBeRed,
+                icon: alert.animationName
+            )
+            self.displayOkAlertView(banner: banner)
+        }
     }
     
     func setupView(){
@@ -510,8 +544,8 @@ class OnboardingViewController: UIViewController {
     }
     
     @objc private func submitButtonTapped() {
-        if self.selectedGender == nil {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){ [weak self] in
+        guard let gender = selectedGender else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 let banner = OkAlertView(
                     title: SignupAlerts.emptyGender.title,
                     message: SignupAlerts.emptyGender.message,
@@ -520,8 +554,16 @@ class OnboardingViewController: UIViewController {
                 )
                 self?.displayOkAlertView(banner: banner)
             }
+            return
         }
-        // View Model to be called
+        
+        let onboardingData = OnboardingData(
+            name: nameTextField.text ?? "",
+            age: Int(ageSlider.value),
+            gender: gender
+        )
+        
+        viewModel.submitButtonTapped(onboardingData: onboardingData)
     }
     
     private func showGenderSelection(){
