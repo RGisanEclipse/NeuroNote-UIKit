@@ -7,7 +7,7 @@
 import Foundation
 @testable import NeuroNote_UIKit
 
-class MockAuthNetworkService: AuthNetworkService {
+class MockAuthNetworkService: NetworkService {
     init(session: NetworkSession) {
         super.init(session: session)
     }

@@ -161,13 +161,15 @@ class LabeledTextField: UIView {
     }
     
     @objc private func focused() {
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: 0.2) { [weak self] in
+            guard let self = self else { return }
             self.blurView.layer.borderColor = UIColor.white.cgColor
         }
     }
     
     @objc private func unfocused() {
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: 0.2) { [weak self] in
+            guard let self = self else { return }
             self.blurView.layer.borderColor = .none
         }
     }

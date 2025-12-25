@@ -10,11 +10,12 @@ import Foundation
 @MainActor
 class LoginViewModel {
     
-    var onMessage: ((AlertContent) -> Void)?
-    var onAsyncStart: (() -> Void)?
-    var onSigninSuccess: (() -> Void)?
+    var onMessage:                  ((AlertContent) -> Void)?
+    var onAsyncStart:               (() -> Void)?
+    var onSigninSuccess:            ((Bool) -> Void)?
     var onForgotPasswordOTPSuccess: (() -> Void)?
-    var onOTPRequired: (() -> Void)?
+    var onOTPRequired:              (() -> Void)?
+    var onOnboardingRequired:       (() -> Void)?
     
     private let authManager: AuthManagerProtocol
     private let otpManager: OTPManagerProtocol
@@ -27,59 +28,26 @@ class LoginViewModel {
     }
     
     func forgotPasswordButtonTapped(email: String) {
-        guard !email.isEmpty else{
+        guard !email.isEmpty else {
             onMessage?(AuthAlert.fieldsMissing)
             return
         }
-        if let emailAlert = EmailValidator.validate(email: email){
+        if let emailAlert = EmailValidator.validate(email: email) {
             onMessage?(emailAlert)
             return
         }
         // Network call to Backend
-        Task{ [weak self] in
+        Task { [weak self] in
             guard let self = self else { return }
             onAsyncStart?()
             do {
-                let otpResponse = try await otpManager.requestOTP(requestData: ForgotPasswordOTPRequest(email: email), purpose: OTPPurpose.ForgotPassword)
-                if otpResponse.success {
-                    // Ask the view controller to navigate back to the OTP screen
-                    self.onForgotPasswordOTPSuccess?()
-                }
+                _ = try await otpManager.requestOTP(
+                    requestData: ForgotPasswordOTPRequest(email: email),
+                    purpose: OTPPurpose.ForgotPassword
+                )
+                self.onForgotPasswordOTPSuccess?()
             } catch {
-                // If the success is false, it's going to automatically catch the APIError/NetworkError
-                // and show the alert
-                let alertContent: AlertContent
-                
-                Logger.shared.error("Error during Forgot Password Request", fields: [
-                    "email": email,
-                    "errorType": String(describing: type(of: error)),
-                    "error": error.localizedDescription
-                ])
-                
-                if let apiError = error as? APIError {
-                    if let authCode = AuthServerCode(rawValue: apiError.code) {
-                        alertContent = authCode.presentation
-                    }
-                    else {
-                        alertContent = AuthAlert.unknown
-                    }
-                }
-                
-                else if let networkErr = error as? NetworkError {
-                    switch networkErr {
-                    case .noInternet:
-                        alertContent = NetworkAlert.noInternet
-                    case .timeout:
-                        alertContent = NetworkAlert.timeout
-                    case .cannotReachServer:
-                        alertContent = NetworkAlert.cannotReachServer
-                    case .generic(let msg):
-                        alertContent = NetworkAlert.generic(msg)
-                    }
-                } else {
-                    alertContent = AuthAlert.unknown
-                }
-                
+                let alertContent = mapErrorToAlert(error, context: ["email": email])
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(alertContent)
                 }
@@ -126,62 +94,61 @@ class LoginViewModel {
                 )
                 
                 if session.isVerified {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.onSigninSuccess?()
+                    if session.isOnboarded {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            self.onSigninSuccess?(true)
+                        }
+                    } else{
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            self.onSigninSuccess?(false)
+                        }
                     }
+                    
                 } else {
                     guard let userId = KeychainHelper.standard.getUserID() else {
                         Logger.shared.error("User Id not found in Keychain")
                         return
                     }
-                    let otpResponse = try await otpManager.requestOTP(requestData: SignupOTPRequest(userId: userId), purpose: OTPPurpose.Signup)
-                    if otpResponse.success {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            self.onOTPRequired?()
-                        }
-                    } else {
-                        throw APIError(code: "UNKNOWN", message: "OTP request failed", status: 0)
+                    _ = try await otpManager.requestOTP(
+                        requestData: SignupOTPRequest(userId: userId),
+                        purpose: OTPPurpose.Signup
+                    )
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.onOTPRequired?()
                     }
                 }
             }
             catch {
-                let alertContent: AlertContent
-                
-                Logger.shared.error("Error during Auth", fields: [
+                let alertContent = mapErrorToAlert(error, context: [
                     "email": email,
-                    "mode": mode == .signup ? "signup" : "signin",
-                    "errorType": String(describing: type(of: error)),
-                    "error": error.localizedDescription
+                    "mode": mode == .signup ? "signup" : "signin"
                 ])
-                
-                if let apiError = error as? APIError {
-                    if let authCode = AuthServerCode(rawValue: apiError.code) {
-                        alertContent = authCode.presentation
-                    }
-                    else {
-                        alertContent = AuthAlert.unknown
-                    }
-                }
-                
-                else if let networkErr = error as? NetworkError {
-                    switch networkErr {
-                    case .noInternet:
-                        alertContent = NetworkAlert.noInternet
-                    case .timeout:
-                        alertContent = NetworkAlert.timeout
-                    case .cannotReachServer:
-                        alertContent = NetworkAlert.cannotReachServer
-                    case .generic(let msg):
-                        alertContent = NetworkAlert.generic(msg)
-                    }
-                } else {
-                    alertContent = AuthAlert.unknown
-                }
-                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(alertContent)
                 }
             }
         }
+    }
+    
+    // MARK: - Error Mapping Helper
+    
+    private func mapErrorToAlert(_ error: Error, context: [String: String] = [:]) -> AlertContent {
+        var logFields: [String: Any] = [
+            "errorType": String(describing: type(of: error)),
+            "error": error.localizedDescription
+        ]
+        context.forEach { logFields[$0.key] = $0.value }
+        
+        Logger.shared.error("API Error", fields: logFields)
+        
+        if let apiError = error as? APIError {
+            return apiError.serverCode.presentation
+        }
+        
+        if let networkErr = error as? NetworkError {
+            return networkErr.presentation
+        }
+        
+        return AuthAlert.unknown
     }
 }

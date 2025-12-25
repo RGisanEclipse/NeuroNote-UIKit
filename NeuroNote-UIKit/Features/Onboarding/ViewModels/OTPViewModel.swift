@@ -55,15 +55,10 @@ class OTPViewModel {
             defer { onAsyncEnd?() }
             
             do {
-                let response = try await otpManager.verifyOTP(otp, userId: userId, purpose: purpose)
-                if response.success {
-                    onOTPVerified?()
-                } else {
-                    handleAPIErrorCode(code: response.errorCode)
-                }
-                
+                _ = try await otpManager.verifyOTP(otp, userId: userId, purpose: purpose)
+                onOTPVerified?()
             } catch let apiError as APIError {
-                handleAPIErrorCode(code: apiError.code)
+                handleAPIError(apiError)
             } catch let networkError as NetworkError {
                 handleNetworkError(networkError)
             } catch {
@@ -94,15 +89,10 @@ class OTPViewModel {
     }
     
     // MARK: - Private Helpers
-    private func handleAPIErrorCode(code: String?) {
-        guard let code = code else {
-            onServerError?()
-            return
-        }
-        switch code {
-        case "OTP_003":
-            onOTPFailed?()
-        case "OTP_004":
+    private func handleAPIError(_ error: APIError) {
+        let serverCode = error.serverCode
+        switch serverCode {
+        case .otpExpiredOrNotFound, .invalidOTP:
             onOTPFailed?()
         default:
             onServerError?()
@@ -110,15 +100,6 @@ class OTPViewModel {
     }
     
     private func handleNetworkError(_ error: NetworkError) {
-        switch error {
-        case .noInternet:
-            onNetworkError?(NetworkAlert.noInternet.title + "\n Please check your internet connection")
-        case .timeout:
-            onNetworkError?(NetworkAlert.timeout.title + "\n Please try again")
-        case .cannotReachServer:
-            onNetworkError?(NetworkAlert.cannotReachServer.title + "\n Please try again")
-        case .generic(let msg):
-            onNetworkError?(NetworkAlert.generic(msg).title)
-        }
+        onNetworkError?(error.presentation.title + "\n" + error.presentation.message)
     }
 }

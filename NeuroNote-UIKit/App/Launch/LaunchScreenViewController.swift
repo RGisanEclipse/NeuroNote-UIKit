@@ -60,7 +60,8 @@ class LaunchScreenViewController: UIViewController {
         UIView.animate(withDuration: 0.8,
                        delay: 0,
                        options: [.curveEaseOut],
-                       animations: {
+                       animations: { [weak self] in
+            guard let self = self else { return }
             self.logoImageView.alpha = 1
             self.logoImageView.transform = CGAffineTransform(
                 scaleX: 1.5,
@@ -69,9 +70,11 @@ class LaunchScreenViewController: UIViewController {
         },
             completion: { _ in
             UIView.animate(withDuration: 0.3,
-                           animations: {
+                           animations: { [weak self] in
+                guard let self = self else { return }
                 self.logoImageView.transform = .identity
-            }, completion: { _ in
+            }, completion: { [weak self] _ in
+                guard let self = self else { return }
                 self.transitionToApp()
             })
         })

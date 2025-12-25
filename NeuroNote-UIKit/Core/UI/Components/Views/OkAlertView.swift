@@ -168,22 +168,24 @@ class OkAlertView: UIView {
                        delay: 0,
                        usingSpringWithDamping: 0.8,
                        initialSpringVelocity: 0.6,
-                       options: .curveEaseInOut) {
+                       options: .curveEaseInOut) { [weak self] in
+            guard let self = self else { return }
             self.alertBox.alpha = 1
             self.alertBox.transform = .identity
             self.badgeAnimationView.alpha = 1
             self.badgeAnimationView.transform = .identity
-        } completion: { _ in
-            self.badgeAnimationView.play()
+        } completion: { [weak self] _ in
+            self?.badgeAnimationView.play()
         }
     }
     
     @objc private func dismissSelf() {
-        UIView.animate(withDuration: 0.2, animations: {
+        UIView.animate(withDuration: 0.2, animations: { [weak self] in
+            guard let self = self else { return }
             self.alertBox.alpha = 0
             self.alpha = 0
-        }) { _ in
-            self.removeFromSuperview()
+        }) { [weak self] _ in
+            self?.removeFromSuperview()
         }
     }
 }

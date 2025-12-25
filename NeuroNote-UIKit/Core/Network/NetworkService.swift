@@ -7,7 +7,7 @@
 
 import Foundation
 // Network Service for private routes
-class AuthNetworkService {
+class NetworkService {
     private let session: NetworkSession
     private let tokenManager: TokenManagerProtocol
     private let maxRetries = 1

@@ -6,115 +6,155 @@
 
 import Foundation
 
-class OTPManager: OTPManagerProtocol {
-    private let networkService: AuthNetworkService
+final class OTPManager: OTPManagerProtocol {
+    
+    private let networkService: NetworkService
     static let shared = OTPManager()
     
-    init(networkService: AuthNetworkService = AuthNetworkService()) {
+    init(networkService: NetworkService = NetworkService()) {
         self.networkService = networkService
     }
     
+    // MARK: - Request OTP
     @discardableResult
     func requestOTP(requestData: OTPRequestData, purpose: OTPPurpose) async throws -> OTPResponse {
-        let endpoint = getRequestEndpointFromPurpose(purpose: purpose)
-        
-        guard let url = URL(string: Routes.base + endpoint) else {
-            throw AuthError.badURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        request.httpBody = try JSONEncoder().encode(requestData)
-        request.timeoutInterval = 10
+        let endpoint = getRequestEndpoint(for: purpose)
+        let request = try makeRequest(urlPath: endpoint, body: requestData)
         
         do {
             let (data, response) = try await networkService.performRequest(request: request)
+            let httpResponse = try validate(response: response, data: data)
             
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw AuthError.invalidResponse
+            // Check for error status codes first
+            if httpResponse.statusCode >= 400 {
+                throw try decodeAPIError(from: data)
             }
             
-            struct SuccessWrapper: Codable { let success: Bool }
-            let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
-            
-            if wrapper.success {
-                let otpResponse = try JSONDecoder().decode(OTPResponse.self, from: data)
-                if purpose == .ForgotPassword {
-                    if let headerFields = httpResponse.allHeaderFields as? [String: String] {
-                        let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: httpResponse.url!)
-                        if let userIdCookie = cookies.first(where: { $0.name == Constants.HTTPFields.userId }) {
-                            KeychainHelper.standard.save(userIdCookie.value, forKey: Constants.KeychainHelperKeys.userId)
-                        }
-                    }                }
-                return otpResponse
-            } else {
-                let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
-                throw apiErrorResponse.error
+            let apiResponse = try JSONDecoder().decode(SuccessAPIResponse.self, from: data)
+            guard apiResponse.success else {
+                throw try decodeAPIError(from: data)
             }
             
-        } catch let networkError as NetworkError {
-            throw networkError
+            // For forgot password, save userId from cookie
+            if purpose == .ForgotPassword {
+                extractUserIdCookie(from: httpResponse)
+            }
+            
+            return apiResponse.response
+            
+        } catch let error as URLError {
+            throw mapURLError(error)
         } catch let apiError as APIError {
             throw apiError
+        } catch let networkError as NetworkError {
+            throw networkError
         } catch {
             throw AuthError.unexpectedError
         }
     }
     
+    // MARK: - Verify OTP
     @discardableResult
     func verifyOTP(_ code: String, userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
-        let endpoint = getVerifyEndpointFromPurpose(purpose: purpose)
-        
-        guard let url = URL(string: Routes.base + endpoint) else {
-            throw AuthError.badURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let body = OTPVerifyRequest(code: code, userId: userId)
-        request.httpBody = try JSONEncoder().encode(body)
-        request.timeoutInterval = 10
+        let endpoint = getVerifyEndpoint(for: purpose)
+        let request = try makeRequest(urlPath: endpoint, body: OTPVerifyRequest(code: code, userId: userId))
         
         do {
             let (data, response) = try await networkService.performRequest(request: request)
+            let httpResponse = try validate(response: response, data: data)
             
-            guard response is HTTPURLResponse else {
-                throw AuthError.invalidResponse
+            // Check for error status codes first
+            if httpResponse.statusCode >= 400 {
+                throw try decodeAPIError(from: data)
             }
             
-            struct SuccessWrapper: Codable { let success: Bool }
-            let wrapper = try JSONDecoder().decode(SuccessWrapper.self, from: data)
-            
-            if wrapper.success {
-                return try JSONDecoder().decode(OTPResponse.self, from: data)
-            } else {
-                let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
-                throw apiErrorResponse.error
+            let apiResponse = try JSONDecoder().decode(SuccessAPIResponse.self, from: data)
+            guard apiResponse.success else {
+                throw try decodeAPIError(from: data)
             }
             
+            return apiResponse.response
+            
+        } catch let error as URLError {
+            throw mapURLError(error)
+        } catch let apiError as APIError {
+            Logger.shared.debug("OTP Verification Error", fields: [
+                "code": apiError.code,
+                "message": apiError.message
+            ])
+            throw apiError
         } catch let networkError as NetworkError {
             throw networkError
-        } catch let apiError as APIError {
-            print("Parsed APIError: \(apiError)")
-            throw apiError
         } catch {
-            print("Unexpected error during OTP verification: \(error)")
+            Logger.shared.error("Unexpected OTP verification error", fields: [
+                "error": error.localizedDescription
+            ])
             throw AuthError.unexpectedError
         }
     }
     
-    func getRequestEndpointFromPurpose(purpose: OTPPurpose) -> String{
-        switch purpose{
+    // MARK: - Helpers
+    private func makeRequest<T: Encodable>(urlPath: String, body: T) throws -> URLRequest {
+        guard let url = URL(string: Routes.base + urlPath) else {
+            throw AuthError.badURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        request.timeoutInterval = 10
+        request.httpBody = try JSONEncoder().encode(body)
+        return request
+    }
+    
+    private func validate(response: URLResponse, data: Data) throws -> HTTPURLResponse {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.invalidResponse
+        }
+        Logger.shared.debug("OTP Response", fields: [
+            "statusCode": httpResponse.statusCode,
+            "body": String(data: data, encoding: .utf8) ?? "",
+            "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? ""
+        ])
+        return httpResponse
+    }
+    
+    private func decodeAPIError(from data: Data) throws -> APIError {
+        let errorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
+        return errorResponse.error
+    }
+    
+    private func extractUserIdCookie(from response: HTTPURLResponse) {
+        guard
+            let headerFields = response.allHeaderFields as? [String: String],
+            let url = response.url
+        else { return }
+        
+        let cookies = HTTPCookie.cookies(withResponseHeaderFields: headerFields, for: url)
+        if let userIdCookie = cookies.first(where: { $0.name == Constants.HTTPFields.userId }) {
+            KeychainHelper.standard.save(userIdCookie.value, forKey: Constants.KeychainHelperKeys.userId)
+        }
+    }
+    
+    private func mapURLError(_ error: URLError) -> NetworkError {
+        switch error.code {
+        case .notConnectedToInternet, .networkConnectionLost:
+            return .noInternet
+        case .cannotFindHost, .cannotConnectToHost:
+            return .cannotReachServer
+        case .timedOut:
+            return .timeout
+        default:
+            return .generic(message: error.localizedDescription)
+        }
+    }
+    
+    private func getRequestEndpoint(for purpose: OTPPurpose) -> String {
+        switch purpose {
         case .Signup:
             return Routes.requestSignupOTP
         case .ForgotPassword:
@@ -122,8 +162,8 @@ class OTPManager: OTPManagerProtocol {
         }
     }
     
-    func getVerifyEndpointFromPurpose(purpose: OTPPurpose) -> String{
-        switch purpose{
+    private func getVerifyEndpoint(for purpose: OTPPurpose) -> String {
+        switch purpose {
         case .Signup:
             return Routes.verifySignupOTP
         case .ForgotPassword:

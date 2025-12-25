@@ -14,20 +14,20 @@ class MockAuthManager: AuthManagerProtocol {
     var shouldThrowUnknownError = false
     var shouldThrowNetworkError = false
     var shouldThrowAPIError = false
-    var serverMessageToThrow: AuthServerCode = .internalServerError
+    var serverCodeToThrow: ServerErrorCode = .internalServerError
     var resetPasswordShouldSucceed = true
     var resetPasswordDelay: TimeInterval = 0.1
     
     func authenticate(email: String, password: String, mode: AuthManager.Mode) async throws -> AuthSession {
         if shouldThrowServerError {
-            throw AuthError.server(serverMessageToThrow)
+            throw AuthError.server(serverCodeToThrow)
         }
         
         if shouldThrowUnknownError {
             throw NSError(domain: "Test", code: -1, userInfo: nil)
         }
         
-        return AuthSession(token: "mock_user_token_123", refreshToken: "random_refresh_token", isVerified: true)
+        return AuthSession(token: "mock_user_token_123", refreshToken: "random_refresh_token", isVerified: true, isOnboarded: true)
     }
     
     func resetPassword(payload: ResetPasswordRequest) async throws -> Bool {
@@ -43,7 +43,7 @@ class MockAuthManager: AuthManagerProtocol {
         }
         
         if shouldThrowServerError {
-            throw AuthError.server(serverMessageToThrow)
+            throw AuthError.server(serverCodeToThrow)
         }
         
         if shouldThrowUnknownError {

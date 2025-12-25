@@ -17,7 +17,8 @@ enum AuthError: LocalizedError, Equatable {
     case noUserIdReceived
     case userNotVerified
     case noRefreshToken
-    case server(AuthServerCode)
+    case server(ServerErrorCode)
+    case missingToken
 
     var errorDescription: String? {
         switch self {
@@ -29,8 +30,9 @@ enum AuthError: LocalizedError, Equatable {
         case .noUserIdReceived:    return "No user id received"
         case .userNotVerified:     return "User not verified"
         case .noRefreshToken:      return "No refresh token"
-        case .server(let msg):     return msg.rawValue
+        case .server(let code):    return code.rawValue
         case .unexpectedError:     return "Unexpected error"
+        case .missingToken:        return "Missing Token"
         }
     }
 }
