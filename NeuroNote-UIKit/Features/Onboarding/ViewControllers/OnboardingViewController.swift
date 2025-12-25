@@ -1,5 +1,5 @@
 //
-//  SignupViewController.swift
+//  OnboardingViewController.swift
 //  NeuroNote-UIKit
 //
 //  Created by Eclipse on 19/07/25.
@@ -8,7 +8,7 @@
 import UIKit
 import Lottie
 
-class SignupViewController: UIViewController {
+class OnboardingViewController: UIViewController {
     
     // MARK: - Lottie
     private lazy var backgroundAnimationView: LottieAnimationView = {
@@ -624,7 +624,7 @@ class SignupViewController: UIViewController {
     }
 }
 
-extension SignupViewController: UITextFieldDelegate {
+extension OnboardingViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
@@ -647,7 +647,7 @@ extension SignupViewController: UITextFieldDelegate {
     }
 }
 
-extension SignupViewController {
+extension OnboardingViewController {
     func registerTraitChanges() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (viewController: UIViewController, previousTraitCollection: UITraitCollection) in
             self?.updateBackgroundAnimation()
@@ -661,5 +661,5 @@ extension SignupViewController {
 }
 
 #Preview{
-    SignupViewController()
+    OnboardingViewController()
 }

@@ -8,10 +8,10 @@
 import Foundation
 
 @MainActor
-class ResetPasswordViewModel{
+class ResetPasswordViewModel {
     
     // MARK: - Properties
-    var onMessage: ((AlertContent)->Void)?
+    var onMessage: ((AlertContent) -> Void)?
     var onAsyncStart: (() -> Void)?
     var onResetSuccess: (() -> Void)?
     
@@ -22,8 +22,8 @@ class ResetPasswordViewModel{
         self.authManager = authManager
     }
     
-    func submitButtonTapped(password: String, confirmPassword: String){
-        if password != confirmPassword{
+    func submitButtonTapped(password: String, confirmPassword: String) {
+        if password != confirmPassword {
             onMessage?(AuthAlert.passwordMismatch)
             return
         }
@@ -52,39 +52,33 @@ class ResetPasswordViewModel{
                     }
                 }
             } catch {
-                let alertContent: AlertContent
-                
-                Logger.shared.error("Error during Password Reset", fields: [
-                    "userId": userId,
-                    "errorType": String(describing: type(of: error)),
-                    "error": error.localizedDescription
-                ])
-                
-                if let apiError = error as? APIError {
-                    if let authCode = AuthServerCode(rawValue: apiError.code) {
-                        alertContent = authCode.presentation
-                    } else {
-                        alertContent = AuthAlert.unknown
-                    }
-                } else if let networkErr = error as? NetworkError {
-                    switch networkErr {
-                    case .noInternet:
-                        alertContent = NetworkAlert.noInternet
-                    case .timeout:
-                        alertContent = NetworkAlert.timeout
-                    case .cannotReachServer:
-                        alertContent = NetworkAlert.cannotReachServer
-                    case .generic(let msg):
-                        alertContent = NetworkAlert.generic(msg)
-                    }
-                } else {
-                    alertContent = AuthAlert.unknown
-                }
-                
+                let alertContent = mapErrorToAlert(error, context: ["userId": userId])
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.onMessage?(alertContent)
                 }
             }
         }
+    }
+    
+    // MARK: - Error Mapping Helper
+    
+    private func mapErrorToAlert(_ error: Error, context: [String: String] = [:]) -> AlertContent {
+        var logFields: [String: Any] = [
+            "errorType": String(describing: type(of: error)),
+            "error": error.localizedDescription
+        ]
+        context.forEach { logFields[$0.key] = $0.value }
+        
+        Logger.shared.error("Password Reset Error", fields: logFields)
+        
+        if let apiError = error as? APIError {
+            return apiError.serverCode.presentation
+        }
+        
+        if let networkErr = error as? NetworkError {
+            return networkErr.presentation
+        }
+        
+        return AuthAlert.unknown
     }
 }

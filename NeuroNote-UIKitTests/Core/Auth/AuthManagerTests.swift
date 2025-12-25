@@ -40,6 +40,7 @@ final class AuthManagerTests: XCTestCase {
                         httpVersion: nil,
                         headerFields: nil)!
     }
+    
     private func makeMockJWT(userId: String) -> String {
         let payloadDict = ["user_id": userId]
         let jsonData = try! JSONSerialization.data(withJSONObject: payloadDict, options: [])
@@ -51,6 +52,21 @@ final class AuthManagerTests: XCTestCase {
         return "header.\(base64).signature"
     }
     
+    /// Creates a success response matching the backend API structure
+    private func makeSuccessAuthResponse(token: String, isVerified: Bool) -> Data {
+        let jsonString = """
+        {
+            "success": true,
+            "status": 200,
+            "response": {
+                "token": "\(token)",
+                "isVerified": \(isVerified)
+            }
+        }
+        """
+        return jsonString.data(using: .utf8)!
+    }
+    
     // MARK: - Happy-AuthCase test
     func testAuthenticateReturnsTokenOnSuccess() async {
         // Ensure clean keychain state
@@ -58,12 +74,7 @@ final class AuthManagerTests: XCTestCase {
         
         let mock = MockNetworkSession()
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        let response = AuthResponse(
-            success: true,
-            message: "ok",
-            data: AuthData(token: token, isVerified: true)
-        )
-        mock.mockData = try? JSONEncoder().encode(response)
+        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: true)
         
         let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
                                          statusCode: 200,
@@ -92,12 +103,7 @@ final class AuthManagerTests: XCTestCase {
         
         let mock = MockNetworkSession()
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        let response = AuthResponse(
-            success: true,
-            message: "ok",
-            data: AuthData(token: token, isVerified: true)
-        )
-        mock.mockData = try? JSONEncoder().encode(response)
+        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: true)
         
         let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
                                          statusCode: 200,
@@ -125,12 +131,8 @@ final class AuthManagerTests: XCTestCase {
     func testAuthenticateReturnsUnverifiedUserCorrectly() async {
         let mock = MockNetworkSession()
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        let response = AuthResponse(
-            success: true,
-            message: "ok",
-            data: AuthData(token: token, isVerified: false)
-        )
-        mock.mockData = try? JSONEncoder().encode(response)
+        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: false)
+        
         // Create a response with refresh token cookie
         let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
                                          statusCode: 200,
@@ -363,7 +365,7 @@ final class AuthManagerTests: XCTestCase {
         // Given
         let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
         mockAuthManager.shouldThrowServerError = true
-        mockAuthManager.serverMessageToThrow = .internalServerError
+        mockAuthManager.serverCodeToThrow = .internalServerError
         
         // When & Then
         do {
@@ -382,7 +384,7 @@ final class AuthManagerTests: XCTestCase {
     
     func testResetPasswordWithDifferentServerErrors() async {
         // Given
-        let serverCodes: [AuthServerCode] = [
+        let serverCodes: [ServerErrorCode] = [
             .internalServerError,
             .unauthorized,
         ]
@@ -390,7 +392,7 @@ final class AuthManagerTests: XCTestCase {
         for serverCode in serverCodes {
             let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
             mockAuthManager.shouldThrowServerError = true
-            mockAuthManager.serverMessageToThrow = serverCode
+            mockAuthManager.serverCodeToThrow = serverCode
             
             // When & Then
             do {

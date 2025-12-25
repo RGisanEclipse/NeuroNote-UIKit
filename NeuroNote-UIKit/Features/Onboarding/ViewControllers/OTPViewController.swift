@@ -177,7 +177,7 @@ class OTPViewController: UIViewController {
                         successView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
                     ])
                     successView.onAnimationCompletion = {
-                        let signupVC = SignupViewController()
+                        let signupVC = OnboardingViewController()
                         signupVC.modalPresentationStyle = .fullScreen
                         signupVC.modalTransitionStyle = .coverVertical
                         self.present(signupVC, animated: true, completion: nil)

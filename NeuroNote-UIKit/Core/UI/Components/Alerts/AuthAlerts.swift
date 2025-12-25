@@ -99,4 +99,11 @@ enum AuthAlert {
         shouldBeRed: false,
         animationName: Constants.animations.unsureStar
     )
+    
+    static let userNotVerified = AlertContent(
+        title: "Not Verified Yet 📬",
+        message: "You need to verify your email first. Check your inbox for the OTP!",
+        shouldBeRed: true,
+        animationName: Constants.animations.angryStar
+    )
 }

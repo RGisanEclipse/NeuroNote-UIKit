@@ -42,7 +42,7 @@ class MockOTPManager: OTPManagerProtocol {
             throw APIError(code: errorCode, message: errorMessage, status: 500)
         }
         
-        return NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+        return NeuroNote_UIKit.OTPResponse(success: true, message: "OTP sent successfully")
     }
     
     func verifyOTP(_ code: String, userId: String, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
@@ -55,8 +55,6 @@ class MockOTPManager: OTPManagerProtocol {
         if !shouldSucceed {
             throw APIError(code: "OTP_004", message: "invalid otp", status: 400)
         }
-        return NeuroNote_UIKit.OTPResponse(
-            success: true,
-            errorCode: nil)
+        return NeuroNote_UIKit.OTPResponse(success: true, message: "OTP verified successfully")
     }
 }

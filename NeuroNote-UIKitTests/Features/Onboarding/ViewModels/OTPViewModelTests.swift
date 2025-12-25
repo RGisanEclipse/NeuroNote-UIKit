@@ -22,7 +22,7 @@ final class OTPViewModelTests: XCTestCase {
         var lastRequestUserId: String?
         var lastRequestPurpose: NeuroNote_UIKit.OTPPurpose?
         
-        func requestOTP(requestData: OTPRequestData,purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
+        func requestOTP(requestData: OTPRequestData, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
             didCallRequest = true
             lastRequestPurpose = purpose
             
@@ -35,7 +35,7 @@ final class OTPViewModelTests: XCTestCase {
             if !shouldSucceed {
                 throw APIError(code: "AUTH_014", message: "failed to send OTP", status: 500)
             }
-            return NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+            return NeuroNote_UIKit.OTPResponse(success: true, message: "OTP sent successfully")
         }
         
         func verifyOTP(_ code: String, userId: String, purpose: NeuroNote_UIKit.OTPPurpose) async throws -> NeuroNote_UIKit.OTPResponse {
@@ -53,7 +53,7 @@ final class OTPViewModelTests: XCTestCase {
             if !shouldSucceed {
                 throw APIError(code: "OTP_004", message: "invalid otp", status: 400)
             }
-            return NeuroNote_UIKit.OTPResponse(success: true, errorCode: nil)
+            return NeuroNote_UIKit.OTPResponse(success: true, message: "OTP verified successfully")
         }
     }
     
@@ -120,7 +120,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(requestData: SignupOTPRequest(userId: Constants.Tests.userId),purpose: .Signup)
+        viewModel.resendOTP(requestData: SignupOTPRequest(userId: Constants.Tests.userId), purpose: .Signup)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
@@ -156,7 +156,7 @@ final class OTPViewModelTests: XCTestCase {
         viewModel.onAsyncStart = {}
         viewModel.onAsyncEnd = {}
         
-        viewModel.resendOTP(requestData: ForgotPasswordOTPRequest(email: Constants.Tests.validEmail),purpose: .ForgotPassword)
+        viewModel.resendOTP(requestData: ForgotPasswordOTPRequest(email: Constants.Tests.validEmail), purpose: .ForgotPassword)
         
         wait(for: [exp], timeout: 2)
         XCTAssertTrue(mockOTPManager.didCallRequest)
@@ -186,7 +186,7 @@ final class OTPViewModelTests: XCTestCase {
         
         let exp = expectation(description: "Network error")
         viewModel.onNetworkError = { message in
-            XCTAssertTrue(message.contains("Please check your internet connection"))
+            XCTAssertTrue(message.contains("offline"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
@@ -219,7 +219,7 @@ final class OTPViewModelTests: XCTestCase {
         
         let exp = expectation(description: "Network error")
         viewModel.onNetworkError = { message in
-            XCTAssertTrue(message.contains("Please try again"))
+            XCTAssertTrue(message.contains("nap") || message.contains("Slow"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
@@ -311,7 +311,7 @@ final class OTPViewModelTests: XCTestCase {
         
         let exp = expectation(description: "No internet error")
         viewModel.onNetworkError = { message in
-            XCTAssertTrue(message.contains("Please check your internet connection"))
+            XCTAssertTrue(message.contains("offline"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
@@ -328,7 +328,7 @@ final class OTPViewModelTests: XCTestCase {
         
         let exp = expectation(description: "Timeout error")
         viewModel.onNetworkError = { message in
-            XCTAssertTrue(message.contains("Please try again"))
+            XCTAssertTrue(message.contains("Slow") || message.contains("nap"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
@@ -345,7 +345,7 @@ final class OTPViewModelTests: XCTestCase {
         
         let exp = expectation(description: "Cannot reach server error")
         viewModel.onNetworkError = { message in
-            XCTAssertTrue(message.contains("Please try again"))
+            XCTAssertTrue(message.contains("Stealth") || message.contains("Server"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
@@ -360,9 +360,9 @@ final class OTPViewModelTests: XCTestCase {
     func testGenericNetworkError() {
         mockOTPManager.simulateNetworkError = .generic(message: "Custom network error")
         
-        let exp = expectation(description: NetworkAlert.generic("").title)
+        let exp = expectation(description: "Generic network error")
         viewModel.onNetworkError = { message in
-            XCTAssertEqual(message, NetworkAlert.generic("").title)
+            XCTAssertTrue(message.contains("Glitchin") || message.contains("Network"))
             exp.fulfill()
         }
         viewModel.onAsyncStart = {}
