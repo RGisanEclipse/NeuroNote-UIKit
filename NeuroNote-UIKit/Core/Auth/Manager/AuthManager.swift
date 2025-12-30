@@ -42,10 +42,12 @@ final class AuthManager: AuthManagerProtocol {
         password: String,
         mode: Mode
     ) async throws -> AuthSession {
-
+        
+        let deviceId = KeychainHelper.standard.getOrCreateDeviceId()
+        
         let request = try makeRequest(
             path: mode.path,
-            body: AuthRequest(email: email, password: password)
+            body: AuthRequest(email: email, password: password, deviceId: deviceId)
         )
 
         do {

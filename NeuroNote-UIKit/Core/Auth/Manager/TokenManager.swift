@@ -31,10 +31,12 @@ final class TokenManager: TokenManagerProtocol {
         else {
             throw AuthError.noRefreshToken
         }
-
+        
+        let deviceId = KeychainHelper.standard.getOrCreateDeviceId()
+        
         let request = try makeRequest(
             path: Routes.refreshToken,
-            body: RefreshTokenRequest(refresh_token: refreshToken)
+            body: RefreshTokenRequest(refresh_token: refreshToken, deviceID: deviceId)
         )
 
         do {

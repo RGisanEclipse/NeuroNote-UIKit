@@ -10,6 +10,7 @@
 struct AuthRequest: Codable {
     let email:    String
     let password: String
+    let deviceId: String
 }
 
 // MARK: - Session Model (Internal use)

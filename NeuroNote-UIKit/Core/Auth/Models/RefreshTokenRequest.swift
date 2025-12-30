@@ -7,4 +7,5 @@
 
 struct RefreshTokenRequest: Codable{
     let refresh_token: String
+    let deviceID:      String
 }

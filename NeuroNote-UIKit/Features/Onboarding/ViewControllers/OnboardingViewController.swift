@@ -275,8 +275,10 @@ class OnboardingViewController: UIViewController {
         
         viewModel.onOnboardingSuccess = { [weak self] in
             guard let self = self else { return }
-            // TODO: Navigate to dashboard/home
-            self.dismiss(animated: true)
+            let homeVC = HomeViewController()
+            homeVC.modalPresentationStyle = .fullScreen
+            homeVC.modalTransitionStyle = .coverVertical
+            self.present(homeVC, animated: true)
         }
         
         viewModel.onMessage = { [weak self] alert in
