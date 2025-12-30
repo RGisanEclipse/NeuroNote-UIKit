@@ -61,10 +61,24 @@ extension KeychainHelper: TokenStore {
     }
 }
 
+extension KeychainHelper: DeviceIdStore {
+    func getOrCreateDeviceId() -> String {
+        let key = Constants.KeychainHelperKeys.deviceId
+        if let existingDeviceId = read(forKey: key) {
+            return existingDeviceId
+        }
+        
+        let newDeviceId = UUID().uuidString
+        save(newDeviceId, forKey: key)
+        return newDeviceId
+    }
+}
+
 extension KeychainHelper {
     func clearTestKeys() {
         delete(forKey: Constants.KeychainHelperKeys.authToken)
         delete(forKey: Constants.KeychainHelperKeys.refreshToken)
         delete(forKey: Constants.KeychainHelperKeys.userId)
+        delete(forKey: Constants.KeychainHelperKeys.deviceId)
     }
 }
