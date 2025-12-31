@@ -39,12 +39,17 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/OTP/Models/OTPPurpose.swift,
+				"Core/UI/LottieAnimations/alien-in-rocket.json",
+				"Core/UI/LottieAnimations/angry-alien.json",
 				"Core/UI/LottieAnimations/angry-star.json",
 				"Core/UI/LottieAnimations/birdie-success.json",
 				Core/UI/LottieAnimations/clouds.json,
+				"Core/UI/LottieAnimations/confused-alien.json",
 				"Core/UI/LottieAnimations/female-avatar.json",
+				"Core/UI/LottieAnimations/happy-alien.json",
 				"Core/UI/LottieAnimations/happy-sun.json",
 				Core/UI/LottieAnimations/jetpack.json,
+				"Core/UI/LottieAnimations/joyful-sky.json",
 				"Core/UI/LottieAnimations/loading-dots.json",
 				"Core/UI/LottieAnimations/lock-success.json",
 				"Core/UI/LottieAnimations/male-avatar.json",
@@ -53,6 +58,7 @@
 				"Core/UI/LottieAnimations/otp-chair.json",
 				Core/UI/LottieAnimations/plane.json,
 				"Core/UI/LottieAnimations/rotating-moon.json",
+				"Core/UI/LottieAnimations/sad-alien.json",
 				"Core/UI/LottieAnimations/unsure-star.json",
 			);
 			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;

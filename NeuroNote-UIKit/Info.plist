@@ -4,6 +4,7 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
+		<string>MontserratAlternates-Medium.ttf</string>
 		<string>Montserrat-VariableFont_wght.ttf</string>
 		<string>Montserrat-Italic-VariableFont_wght.ttf</string>
 		<string>beachday.ttf</string>

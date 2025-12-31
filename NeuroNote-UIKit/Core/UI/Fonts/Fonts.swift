@@ -24,5 +24,6 @@ struct Fonts{
     static let MontserratExtraBoldItalic    = "Montserrat-ExtraBoldItalic"
     static let MontserratBlack              = "Montserrat-Black"
     static let MontserratBlackItalic        = "Montserrat-BlackItalic"
+    static let MontserratAlternates         = "MontserratAlternates-Medium"
     static let BeachDay                     = "Beachday"
 }
