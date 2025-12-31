@@ -11,7 +11,7 @@ import UIKit
 
 enum WeeklyMoodStripState {
     case loading
-    case loaded([DailyMoodCircle.Configuration])
+    case loaded([DailyMoodCircleData])
     case error(String)
 }
 
@@ -241,7 +241,7 @@ class WeeklyMoodStrip: UIView {
         startSkeletonAnimation()
     }
     
-    private func showContent(with configurations: [DailyMoodCircle.Configuration]) {
+    private func showContent(with configurations: [DailyMoodCircleData]) {
         stopSkeletonAnimation()
         
         // Clear existing circles
@@ -304,7 +304,7 @@ class WeeklyMoodStrip: UIView {
         strip.centerYAnchor.constraint(equalTo: container.centerYAnchor)
     ])
     
-    let configs: [DailyMoodCircle.Configuration] = [
+    let configs: [DailyMoodCircleData] = [
         .init(date: "8", moodColor: UIColor(red: 0.55, green: 0.85, blue: 0.9, alpha: 1.0), circleSize: 20),
         .init(date: "9", moodColor: UIColor(red: 0.7, green: 0.9, blue: 0.6, alpha: 1.0), circleSize: 20),
         .init(date: "10", moodColor: UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0), circleSize: 20),

@@ -71,7 +71,7 @@ class HomeViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: [prefixLabel, moodCasinoLabel])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .vertical
-        stack.alignment = .fill
+        stack.alignment = .center
         stack.spacing = 8
         return stack
     }()
@@ -306,7 +306,7 @@ class HomeViewController: UIViewController {
             let today = Date()
             
             // Generate last 7 days
-            var configs: [DailyMoodCircle.Configuration] = []
+            var configs: [DailyMoodCircleData] = []
             
             // Sample mood colors (replace with actual data)
             let sampleColors: [UIColor?] = [
