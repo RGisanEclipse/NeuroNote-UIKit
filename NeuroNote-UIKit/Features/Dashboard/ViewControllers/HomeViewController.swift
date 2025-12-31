@@ -141,12 +141,22 @@ class HomeViewController: UIViewController {
         return chart
     }()
     
+    private lazy var weeklyMoodStrip: WeeklyMoodStrip = {
+        let strip = WeeklyMoodStrip()
+        strip.translatesAutoresizingMaskIntoConstraints = false
+        strip.onSeeMoreTapped = { [weak self] in
+            self?.handleWeeklyMoodSeeMore()
+        }
+        return strip
+    }()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         buildHierarchy()
         setupConstraints()
+        fetchWeeklyMoodData()
         fetchInsightsData()
     }
     
@@ -167,9 +177,9 @@ class HomeViewController: UIViewController {
         contentCardView.addSubview(contentScrollView)
         contentScrollView.addSubview(scrollContentStack)
         
-        // Add insights chart to scroll content
+        // Add content to scroll stack
         scrollContentStack.addArrangedSubview(insightsChartView)
-        
+        scrollContentStack.addArrangedSubview(weeklyMoodStrip)
         backgroundAnimationView.play()
         moodAnimationView.play()
     }
@@ -284,6 +294,55 @@ class HomeViewController: UIViewController {
             
             self?.insightsChartView.setState(.loaded(sampleData))
         }
+    }
+    
+    private func fetchWeeklyMoodData() {
+        weeklyMoodStrip.setState(.loading)
+        
+        // TODO: Replace with actual API call
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            // Get current date info for "today" highlighting
+            let calendar = Calendar.current
+            let today = Date()
+            
+            // Generate last 7 days
+            var configs: [DailyMoodCircle.Configuration] = []
+            
+            // Sample mood colors (replace with actual data)
+            let sampleColors: [UIColor?] = [
+                UIColor(red: 0.55, green: 0.85, blue: 0.9, alpha: 1.0),  // Calm
+                UIColor(red: 0.7, green: 0.9, blue: 0.6, alpha: 1.0),    // Happy
+                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Joy
+                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Joy
+                UIColor(red: 0.75, green: 0.7, blue: 0.9, alpha: 1.0),   // Neutral
+                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Today
+                nil                                                       // Tomorrow
+            ]
+            
+            for i in 0..<7 {
+                let dayOffset = i - 5  // -5 to +1 from today
+                let date = calendar.date(byAdding: .day, value: dayOffset, to: today) ?? today
+                let day = calendar.component(.day, from: date)
+                
+                let isToday = dayOffset == 0
+                let isFuture = dayOffset > 0
+                
+                configs.append(.init(
+                    date: "\(day)",
+                    moodColor: sampleColors[i],
+                    circleSize: 20,
+                    isToday: isToday,
+                    isFuture: isFuture
+                ))
+            }
+            
+            self?.weeklyMoodStrip.setState(.loaded(configs))
+        }
+    }
+    
+    private func handleWeeklyMoodSeeMore() {
+        // TODO: Navigate to mood history/calendar view
+        print("See More tapped - navigate to mood history")
     }
 }
 

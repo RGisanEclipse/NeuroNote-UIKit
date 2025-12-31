@@ -143,7 +143,8 @@ class LoadingOverlayView: UIView {
     }
     
     func animateIn() {
-        self.transform = CGAffineTransform(translationX: UIScreen.main.bounds.width, y: 0)
+        let screenWidth = self.window?.windowScene?.screen.bounds.width ?? self.bounds.width
+        self.transform = CGAffineTransform(translationX: screenWidth, y: 0)
         self.alpha = 0
 
         UIView.animate(

@@ -82,7 +82,7 @@ class CasinoTextLabel: UIView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .horizontal
         stack.alignment = .center
-        stack.distribution = .equalSpacing
+        stack.distribution = .fill
         stack.spacing = letterSpacing
         
         addSubview(stack)
