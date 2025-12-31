@@ -7,6 +7,12 @@
 
 import UIKit
 
+enum InsightsChartViewState {
+    case loading
+    case loaded([MoodInsightsChartViewData])
+    case error(String)
+}
+
 struct MoodInsightsChartViewData {
     let label: String
     let icon: UIImage?

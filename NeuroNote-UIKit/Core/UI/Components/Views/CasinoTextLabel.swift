@@ -13,17 +13,21 @@ class CasinoTextLabel: UIView {
     
     // MARK: - Configuration
     private let targetText: String
-    private let font: UIFont
+    private var font: UIFont
+    private let baseFont: UIFont
     private let textColor: UIColor
-    private let letterSpacing: CGFloat
+    private var letterSpacing: CGFloat
+    private let baseLetterSpacing: CGFloat
     private let rollDuration: TimeInterval
     private let staggerDelay: TimeInterval
+    private let minFontScale: CGFloat
     
     // MARK: - State
     private var letterLabels: [UILabel] = []
     private var displayLinks: [CADisplayLink] = []
     private var letterStartTimes: [CFTimeInterval] = []
     private var hasAnimated = false
+    private var stackView: UIStackView?
     
     private let randomCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*"
     
@@ -37,20 +41,25 @@ class CasinoTextLabel: UIView {
     ///   - letterSpacing: Space between each letter (default: 4).
     ///   - rollDuration: How long each letter "rolls" before settling (default: 0.8 seconds).
     ///   - staggerDelay: Delay between each letter starting its animation (default: 0.1 seconds).
+    ///   - minFontScale: Minimum scale factor for auto-sizing (default: 0.5 = 50% of original size).
     init(
         text: String,
         font: UIFont,
         textColor: UIColor,
         letterSpacing: CGFloat = 4,
         rollDuration: TimeInterval = 0.8,
-        staggerDelay: TimeInterval = 0.1
+        staggerDelay: TimeInterval = 0.1,
+        minFontScale: CGFloat = 0.5
     ) {
         self.targetText = text.uppercased()
         self.font = font
+        self.baseFont = font
         self.textColor = textColor
         self.letterSpacing = letterSpacing
+        self.baseLetterSpacing = letterSpacing
         self.rollDuration = rollDuration
         self.staggerDelay = staggerDelay
+        self.minFontScale = minFontScale
         super.init(frame: .zero)
         setupView()
     }
@@ -67,29 +76,99 @@ class CasinoTextLabel: UIView {
     
     private func setupView() {
         translatesAutoresizingMaskIntoConstraints = false
+        clipsToBounds = false
         
-        let stackView = UIStackView()
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.axis = .horizontal
-        stackView.alignment = .center
-        stackView.distribution = .equalSpacing
-        stackView.spacing = letterSpacing
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.distribution = .equalSpacing
+        stack.spacing = letterSpacing
         
-        addSubview(stackView)
+        addSubview(stack)
+        self.stackView = stack
         
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: topAnchor),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            stack.topAnchor.constraint(equalTo: topAnchor),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            stack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor)
         ])
         
         // Create a label for each letter
         for char in targetText {
             let label = createLetterLabel(String(char))
             letterLabels.append(label)
-            stackView.addArrangedSubview(label)
+            stack.addArrangedSubview(label)
         }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        adjustFontToFit()
+    }
+    
+    private func adjustFontToFit() {
+        guard bounds.width > 0 else { return }
+        
+        let availableWidth = bounds.width
+        var currentScale: CGFloat = 1.0
+        
+        // Calculate width needed at current scale
+        func calculateNeededWidth(scale: CGFloat) -> CGFloat {
+            let scaledFont = baseFont.withSize(baseFont.pointSize * scale)
+            let scaledSpacing = baseLetterSpacing * scale
+            
+            var totalWidth: CGFloat = 0
+            let sampleText = "W"
+            let charSize = (sampleText as NSString).size(withAttributes: [.font: scaledFont])
+            
+            totalWidth = charSize.width * CGFloat(targetText.count)
+            totalWidth += scaledSpacing * CGFloat(max(0, targetText.count - 1))
+            
+            return totalWidth
+        }
+        
+        // Binary search for the right scale
+        var minScale = minFontScale
+        var maxScale: CGFloat = 1.0
+        
+        while maxScale - minScale > 0.01 {
+            let midScale = (minScale + maxScale) / 2
+            let neededWidth = calculateNeededWidth(scale: midScale)
+            
+            if neededWidth <= availableWidth {
+                minScale = midScale
+            } else {
+                maxScale = midScale
+            }
+        }
+        
+        currentScale = minScale
+        
+        // Apply the scaled font and spacing
+        let newFontSize = baseFont.pointSize * currentScale
+        font = baseFont.withSize(newFontSize)
+        letterSpacing = baseLetterSpacing * currentScale
+        
+        // Update labels
+        for label in letterLabels {
+            label.font = font
+            
+            // Update width constraint
+            let sampleText = "W"
+            let size = (sampleText as NSString).size(withAttributes: [.font: font])
+            
+            for constraint in label.constraints {
+                if constraint.firstAttribute == .width {
+                    constraint.constant = size.width
+                }
+            }
+        }
+        
+        // Update stack spacing
+        stackView?.spacing = letterSpacing
     }
     
     private func createLetterLabel(_ character: String) -> UILabel {

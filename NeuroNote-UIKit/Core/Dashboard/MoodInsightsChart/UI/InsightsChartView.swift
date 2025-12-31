@@ -9,30 +9,6 @@ import UIKit
 
 class InsightsChartView: UIView {
     
-    // MARK: - State
-    
-    enum State {
-        case loading
-        case loaded([MoodData])
-        case error(String)
-    }
-    
-    // MARK: - Mood Data Model
-    
-    struct MoodData {
-        let label: String
-        let icon: UIImage?
-        let color: UIColor
-        let percentage: CGFloat
-        
-        init(label: String, icon: UIImage?, color: UIColor, percentage: CGFloat) {
-            self.label = label
-            self.icon = icon
-            self.color = color
-            self.percentage = min(max(percentage, 0), 1)
-        }
-    }
-    
     // MARK: - Callbacks
     
     var onRefreshTapped: (() -> Void)?
@@ -156,8 +132,8 @@ class InsightsChartView: UIView {
     
     private var barViews: [InsightsBarView] = []
     private var skeletonBarViews: [SkeletonBarView] = []
-    private var moodData: [MoodData] = []
-    private(set) var currentState: State = .loading
+    private var moodData: [MoodInsightsChartViewData] = []
+    private(set) var currentState: InsightsChartViewState = .loading
     private var skeletonCount: Int = 3
     
     // MARK: - Init
@@ -176,7 +152,7 @@ class InsightsChartView: UIView {
         setupErrorViews()
     }
     
-    convenience init(data: [MoodData]) {
+    convenience init(data: [MoodInsightsChartViewData]) {
         self.init(frame: .zero)
         setState(.loaded(data))
     }
@@ -282,7 +258,7 @@ class InsightsChartView: UIView {
     
     // MARK: - State Management
     
-    func setState(_ state: State, animated: Bool = true) {
+    func setState(_ state: InsightsChartViewState, animated: Bool = true) {
         currentState = state
         
         let duration: TimeInterval = animated ? 0.3 : 0
@@ -310,7 +286,7 @@ class InsightsChartView: UIView {
         }
     }
     
-    private func showLoaded(data: [MoodData], animated: Bool, duration: TimeInterval) {
+    private func showLoaded(data: [MoodInsightsChartViewData], animated: Bool, duration: TimeInterval) {
         skeletonBarViews.forEach { $0.stopShimmer() }
         skeletonLegendView.stopShimmer()
         
@@ -362,7 +338,7 @@ class InsightsChartView: UIView {
     
     // MARK: - Configuration
     
-    private func configure(with data: [MoodData]) {
+    private func configure(with data: [MoodInsightsChartViewData]) {
         self.moodData = data
         
         // Clear existing bars and legend items
@@ -469,7 +445,7 @@ class InsightsChartView: UIView {
     let container = UIView()
     container.backgroundColor = UIColor.systemGroupedBackground
     
-    let sampleData: [InsightsChartView.MoodData] = [
+    let sampleData: [MoodInsightsChartViewData] = [
         .init(
             label: "Happy",
             icon: UIImage(systemName: "face.smiling.fill")?.withTintColor(

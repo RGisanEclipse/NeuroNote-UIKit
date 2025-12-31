@@ -59,7 +59,7 @@ class HomeViewController: UIViewController {
             text: "HAPPY",
             font: UIFont(name: Fonts.BeachDay, size: 36) ?? .boldSystemFont(ofSize: 36),
             textColor: getMoodColor(),
-            letterSpacing: 3,
+            letterSpacing: 0,
             rollDuration: 1,
             staggerDelay: 0.2
         )
@@ -71,7 +71,7 @@ class HomeViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: [prefixLabel, moodCasinoLabel])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .vertical
-        stack.alignment = .center
+        stack.alignment = .fill
         stack.spacing = 8
         return stack
     }()
@@ -82,6 +82,7 @@ class HomeViewController: UIViewController {
         stack.axis = .horizontal
         stack.spacing = 0
         stack.alignment = .center
+        stack.distribution = .fill
         return stack
     }()
     
@@ -187,22 +188,14 @@ class HomeViewController: UIViewController {
             greetingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
             // Mood section
+            moodAnimationFeelingStack.topAnchor.constraint(equalTo: greetingLabel.bottomAnchor, constant: 20),
+            moodAnimationFeelingStack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            moodAnimationFeelingStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
             
-            moodFeelingStack.widthAnchor.constraint(
-                   equalTo: view.widthAnchor,
-                   multiplier: 0.5
-               ),
-            moodFeelingStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            moodAnimationFeelingStack.topAnchor.constraint(equalTo: greetingLabel.bottomAnchor, constant: 24),
-            moodAnimationFeelingStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
-            moodAnimationFeelingStack.trailingAnchor.constraint(
-                equalTo: view.trailingAnchor, constant: -5
-            ),
-            
-            // Responsive animation
-            moodAnimationView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.14),
-            moodAnimationView.widthAnchor.constraint(equalTo: moodAnimationView.heightAnchor),
+            // Animation: 28%, Text: 72% of stack width (respects padding)
+            moodAnimationView.widthAnchor.constraint(equalTo: moodAnimationFeelingStack.widthAnchor, multiplier: 0.28),
+            moodAnimationView.heightAnchor.constraint(equalTo: moodAnimationView.widthAnchor),
+            moodFeelingStack.widthAnchor.constraint(equalTo: moodAnimationFeelingStack.widthAnchor, multiplier: 0.72),
             
             // Content card
             contentCardView.topAnchor.constraint(equalTo: backgroundAnimationView.bottomAnchor, constant: -40),
@@ -259,7 +252,7 @@ class HomeViewController: UIViewController {
         // TODO: Replace with actual API call
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             // Simulated success with sample data
-            let sampleData: [InsightsChartView.MoodData] = [
+            let sampleData: [MoodInsightsChartViewData] = [
                 .init(
                     label: "Happy",
                     icon: UIImage(systemName: "face.smiling.fill")?.withTintColor(
