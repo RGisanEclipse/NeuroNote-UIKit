@@ -5,7 +5,59 @@ class HomeViewController: UIViewController {
     
     // MARK: - UI
     
-    // Background Animation
+    private lazy var logMoodButton: UIView = {
+        let buttonSize: CGFloat = 44
+        
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.layer.cornerRadius = buttonSize / 2
+        container.clipsToBounds = true
+        
+        let blurEffect = UIBlurEffect(style: .systemThinMaterial)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.isUserInteractionEnabled = false
+        container.addSubview(blurView)
+        
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.25)
+                : UIColor.black.withAlphaComponent(0.15)
+        }.cgColor
+        
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let plusIcon = UIImage(systemName: "plus", withConfiguration: iconConfig)
+        let iconView = UIImageView(image: plusIcon)
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.tintColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.9)
+                : UIColor(red: 0.18, green: 0.15, blue: 0.25, alpha: 1.0) 
+        }
+        iconView.contentMode = .scaleAspectFit
+        container.addSubview(iconView)
+        
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: container.topAnchor),
+            blurView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            blurView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            
+            iconView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            
+            container.widthAnchor.constraint(equalToConstant: buttonSize),
+            container.heightAnchor.constraint(equalToConstant: buttonSize)
+        ])
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(logMoodButtonTapped))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
+        
+        return container
+    }()
+    
     private lazy var backgroundAnimationView: LottieAnimationView = {
         let animation = LottieAnimation.named("stars")
         let view = LottieAnimationView(animation: animation)
@@ -155,6 +207,7 @@ class HomeViewController: UIViewController {
         super.viewDidLoad()
         buildHierarchy()
         setupConstraints()
+        registerForTraitChanges()
         fetchWeeklyMoodData()
         fetchInsightsData()
     }
@@ -164,6 +217,18 @@ class HomeViewController: UIViewController {
         animateContentIn()
     }
     
+    private func registerForTraitChanges() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (traitEnvironment: Self, previousTraitCollection: UITraitCollection) in
+            self?.updateLogMoodButtonAppearance()
+        }
+    }
+    
+    private func updateLogMoodButtonAppearance() {
+        logMoodButton.layer.borderColor = traitCollection.userInterfaceStyle == .dark
+            ? UIColor.white.withAlphaComponent(0.25).cgColor
+            : UIColor.black.withAlphaComponent(0.15).cgColor
+    }
+    
     // MARK: - UI Builders
     
     private func buildHierarchy() {
@@ -171,12 +236,11 @@ class HomeViewController: UIViewController {
         view.addSubview(contentCardView)
         view.addSubview(greetingLabel)
         view.addSubview(moodAnimationFeelingStack)
+        view.addSubview(logMoodButton)
         
-        // Setup scroll view inside card
         contentCardView.addSubview(contentScrollView)
         contentScrollView.addSubview(scrollContentStack)
         
-        // Add content to scroll stack
         scrollContentStack.addArrangedSubview(insightsChartView)
         scrollContentStack.addArrangedSubview(weeklyMoodStrip)
         backgroundAnimationView.play()
@@ -185,28 +249,26 @@ class HomeViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Background
             backgroundAnimationView.topAnchor.constraint(equalTo: view.topAnchor),
             backgroundAnimationView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundAnimationView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundAnimationView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.36),
             
-            // Greeting
+            logMoodButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            logMoodButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
             greetingLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             greetingLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             greetingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-            // Mood section
             moodAnimationFeelingStack.topAnchor.constraint(equalTo: greetingLabel.bottomAnchor, constant: 20),
             moodAnimationFeelingStack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             moodAnimationFeelingStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
             
-            // Animation: 28%, Text: 72% of stack width (respects padding)
             moodAnimationView.widthAnchor.constraint(equalTo: moodAnimationFeelingStack.widthAnchor, multiplier: 0.28),
             moodAnimationView.heightAnchor.constraint(equalTo: moodAnimationView.widthAnchor),
             moodFeelingStack.widthAnchor.constraint(equalTo: moodAnimationFeelingStack.widthAnchor, multiplier: 0.72),
             
-            // Content card
             contentCardView.topAnchor.constraint(equalTo: backgroundAnimationView.bottomAnchor, constant: -40),
             contentCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -241,6 +303,24 @@ class HomeViewController: UIViewController {
         } completion: { [weak self] _ in
             self?.moodCasinoLabel.startAnimation()
         }
+    }
+    
+    // MARK: - Actions
+    
+    @objc private func logMoodButtonTapped() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+        
+        UIView.animate(withDuration: 0.1, animations: { [weak self] in
+            self?.logMoodButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) { [weak self] in
+                self?.logMoodButton.transform = .identity
+            }
+        }
+        
+        // TODO: Navigate to mood logging screen
+        print("Log Mood tapped - navigate to mood entry")
     }
     
     // MARK: - Helpers
