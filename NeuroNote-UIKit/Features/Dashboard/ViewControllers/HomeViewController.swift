@@ -7,7 +7,7 @@ class HomeViewController: UIViewController {
     
     // Background Animation
     private lazy var backgroundAnimationView: LottieAnimationView = {
-        let animation = LottieAnimation.named(Constants.animations.joyfulSky)
+        let animation = LottieAnimation.named("stars")
         let view = LottieAnimationView(animation: animation)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.contentMode = .scaleAspectFill
@@ -37,7 +37,7 @@ class HomeViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "How was your day?"
         label.font = UIFont(name: Fonts.MontserratBold, size: 25) ?? .systemFont(ofSize: 25, weight: .medium)
-        label.textColor = .systemCyan
+        label.textColor = UIColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1.0)
         label.textAlignment = .center
         label.alpha = 0
         return label
@@ -92,11 +92,10 @@ class HomeViewController: UIViewController {
     private lazy var contentCardView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        // Off-white in light mode, grayish in dark mode
         view.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.15, green: 0.15, blue: 0.17, alpha: 1.0)  // Dark gray
-                : UIColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1.0)  // Off-white
+                ? UIColor(red: 0.18, green: 0.15, blue: 0.25, alpha: 1.0) // Dark purple
+                : UIColor(red: 0.922, green: 0.910, blue: 0.988, alpha: 1.0) // Purplish-white
         }
         view.layer.cornerRadius = 28
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner] // Only top corners rounded
@@ -265,29 +264,30 @@ class HomeViewController: UIViewController {
             let sampleData: [MoodInsightsChartViewData] = [
                 .init(
                     label: "Happy",
-                    icon: UIImage(systemName: "face.smiling.fill")?.withTintColor(
-                        UIColor(red: 0.95, green: 0.85, blue: 0.35, alpha: 1.0),
-                        renderingMode: .alwaysOriginal
+                    icon: UIImage(named: "happyFace"),
+                    color: UIColor(
+                        red: 0.95,
+                        green: 0.80,
+                        blue: 0.38,
+                        alpha: 1.0
                     ),
-                    color: UIColor(red: 0.95, green: 0.9, blue: 0.5, alpha: 1.0),
                     percentage: 0.7
                 ),
                 .init(
                     label: "Discomfort",
-                    icon: UIImage(systemName: "face.smiling.fill")?.withTintColor(
-                        UIColor(red: 0.6, green: 0.75, blue: 0.55, alpha: 1.0),
-                        renderingMode: .alwaysOriginal
-                    ),
-                    color: UIColor(red: 0.7, green: 0.85, blue: 0.65, alpha: 1.0),
+                    icon: UIImage(named: "disgustedFace"),
+                    color: UIColor(red: 0.55, green: 0.80, blue: 0.62, alpha: 1.0),
                     percentage: 0.35
                 ),
                 .init(
                     label: "Drained",
-                    icon: UIImage(systemName: "face.smiling.fill")?.withTintColor(
-                        UIColor(red: 0.45, green: 0.7, blue: 0.75, alpha: 1.0),
-                        renderingMode: .alwaysOriginal
+                    icon: UIImage(named: "fearedFace"),
+                    color: UIColor(
+                        red: 0.63,
+                        green: 0.56,
+                        blue: 0.86,
+                        alpha: 1.0
                     ),
-                    color: UIColor(red: 0.55, green: 0.8, blue: 0.85, alpha: 1.0),
                     percentage: 0.5
                 ),
             ]

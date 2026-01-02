@@ -20,7 +20,7 @@ class InsightsChartView: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.12, green: 0.12, blue: 0.14, alpha: 1.0)
+                ? UIColor(red: 0.14, green: 0.13, blue: 0.20, alpha: 1.0)
                 : .white
         }
         view.layer.cornerRadius = 20

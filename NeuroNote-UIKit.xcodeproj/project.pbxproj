@@ -59,6 +59,7 @@
 				Core/UI/LottieAnimations/plane.json,
 				"Core/UI/LottieAnimations/rotating-moon.json",
 				"Core/UI/LottieAnimations/sad-alien.json",
+				Core/UI/LottieAnimations/stars.json,
 				"Core/UI/LottieAnimations/unsure-star.json",
 			);
 			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;
