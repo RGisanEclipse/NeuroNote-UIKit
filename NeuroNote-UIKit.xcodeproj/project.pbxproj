@@ -53,6 +53,7 @@
 				"Core/UI/LottieAnimations/loading-dots.json",
 				"Core/UI/LottieAnimations/lock-success.json",
 				"Core/UI/LottieAnimations/male-avatar.json",
+				"Core/UI/LottieAnimations/meditating-brain.json",
 				"Core/UI/LottieAnimations/night-sky.json",
 				"Core/UI/LottieAnimations/no-wifi.json",
 				"Core/UI/LottieAnimations/otp-chair.json",

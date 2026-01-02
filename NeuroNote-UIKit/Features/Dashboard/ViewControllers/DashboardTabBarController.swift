@@ -114,9 +114,19 @@ class DashboardTabBarController: UITabBarController {
             .font: UIFont(name: Fonts.MontserratMedium, size: 10) ?? .systemFont(ofSize: 10, weight: .medium)
         ]
         
-        itemAppearance.selected.iconColor = .systemCyan
+        itemAppearance.selected.iconColor = UIColor(
+            red: 0.510,
+            green: 0.114,
+            blue: 0.529,
+            alpha: 1.0
+        )
         itemAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor.systemCyan,
+            .foregroundColor: UIColor(
+                red: 0.510,
+                green: 0.114,
+                blue: 0.529,
+                alpha: 1.0
+            ),
             .font: UIFont(name: Fonts.MontserratSemiBold, size: 10) ?? .systemFont(ofSize: 10, weight: .semibold)
         ]
         

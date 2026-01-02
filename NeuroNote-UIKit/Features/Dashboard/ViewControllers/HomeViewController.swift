@@ -165,7 +165,7 @@ class HomeViewController: UIViewController {
         scrollView.showsVerticalScrollIndicator = true
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
-        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.contentInsetAdjustmentBehavior = .automatic
         return scrollView
     }()
     
@@ -199,6 +199,50 @@ class HomeViewController: UIViewController {
             self?.handleWeeklyMoodSeeMore()
         }
         return strip
+    }()
+    
+    private lazy var tilesStack: UIStackView = {
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.spacing = 16
+        stack.distribution = .fillEqually
+        stack.alignment = .top
+        return stack
+    }()
+    
+    private lazy var breatheCard: LottieCard = {
+        let card = LottieCard()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.configure(
+            topText: "Breathe",
+            bottomText: "Try out a 30 minute guided breathing exercise",
+            animationName: "meditating-brain"
+        ) { [weak self] in
+            self?.handleBreatheCardTapped()
+        }
+        return card
+    }()
+    
+    /// Invisible spacer to maintain grid layout when odd number of cards
+    private lazy var tilesSpacer: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+    
+    private lazy var streakInsightCard: InsightCard = {
+        let card = InsightCard()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.configure(
+            text: "You've checked in 3 days this week!",
+            backgroundColor: UIColor(red: 0.45, green: 0.36, blue: 0.65, alpha: 1.0)
+        ) { [weak self] in
+            self?.handleInsightCardTapped()
+        }
+        return card
     }()
     
     // MARK: - Lifecycle
@@ -243,6 +287,11 @@ class HomeViewController: UIViewController {
         
         scrollContentStack.addArrangedSubview(insightsChartView)
         scrollContentStack.addArrangedSubview(weeklyMoodStrip)
+        
+        tilesStack.addArrangedSubview(breatheCard)
+        tilesStack.addArrangedSubview(streakInsightCard)
+        scrollContentStack.addArrangedSubview(tilesStack)
+        
         backgroundAnimationView.play()
         moodAnimationView.play()
     }
@@ -283,7 +332,7 @@ class HomeViewController: UIViewController {
             scrollContentStack.leadingAnchor.constraint(equalTo: contentScrollView.leadingAnchor),
             scrollContentStack.trailingAnchor.constraint(equalTo: contentScrollView.trailingAnchor),
             scrollContentStack.bottomAnchor.constraint(equalTo: contentScrollView.bottomAnchor),
-            scrollContentStack.widthAnchor.constraint(equalTo: contentScrollView.widthAnchor)
+            scrollContentStack.widthAnchor.constraint(equalTo: contentScrollView.widthAnchor),
         ])
     }
     // MARK: - Animation
@@ -432,6 +481,14 @@ class HomeViewController: UIViewController {
     private func handleWeeklyMoodSeeMore() {
         // TODO: Navigate to mood history/calendar view
         print("See More tapped - navigate to mood history")
+    }
+    
+    private func handleBreatheCardTapped() {
+        print("Breathe card tapped")
+    }
+    
+    private func handleInsightCardTapped() {
+        print("Insight card tapped")
     }
 }
 
