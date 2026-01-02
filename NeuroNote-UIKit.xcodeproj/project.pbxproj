@@ -44,6 +44,7 @@
 				"Core/UI/LottieAnimations/angry-star.json",
 				"Core/UI/LottieAnimations/birdie-success.json",
 				Core/UI/LottieAnimations/clouds.json,
+				Core/UI/LottieAnimations/confetti.json,
 				"Core/UI/LottieAnimations/confused-alien.json",
 				"Core/UI/LottieAnimations/female-avatar.json",
 				"Core/UI/LottieAnimations/happy-alien.json",

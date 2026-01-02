@@ -45,7 +45,8 @@ class WeeklyMoodStrip: UIView {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "This Week's Mood"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.font = UIFont(name: Fonts.MontserratSemiBold, size: 16) ??
+            .systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
         return label
     }()

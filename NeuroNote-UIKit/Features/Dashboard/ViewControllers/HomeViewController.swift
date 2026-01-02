@@ -3,6 +3,10 @@ import Lottie
 
 class HomeViewController: UIViewController {
     
+    // MARK: - State
+    
+    private var hasShownStreakConfetti = false
+    
     // MARK: - UI
     
     private lazy var logMoodButton: UIView = {
@@ -351,6 +355,14 @@ class HomeViewController: UIViewController {
             self?.prefixLabel.alpha = 1
         } completion: { [weak self] _ in
             self?.moodCasinoLabel.startAnimation()
+        }
+        
+        // Play overlay animation on streak insight card once
+        if !hasShownStreakConfetti {
+            hasShownStreakConfetti = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.streakInsightCard.playOverlayAnimation(named: "confetti")
+            }
         }
     }
     

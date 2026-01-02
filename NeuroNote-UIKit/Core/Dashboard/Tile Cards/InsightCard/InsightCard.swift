@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import Lottie
 
 final class InsightCard: UIView {
     
@@ -18,6 +19,22 @@ final class InsightCard: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.layer.cornerRadius = 16
         view.clipsToBounds = true
+        return view
+    }()
+    
+    private lazy var overlayAnimationView: LottieAnimationView = {
+        let view = LottieAnimationView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.contentMode = .scaleAspectFill
+        view.loopMode = .playOnce
+        view.backgroundBehavior = .pauseAndRestore
+        view.isUserInteractionEnabled = false
+        view.alpha = 0
+        // Prevent animation from affecting card layout
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentHuggingPriority(.defaultLow, for: .vertical)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         return view
     }()
     
@@ -70,6 +87,7 @@ final class InsightCard: UIView {
     private func setupUI() {
         addSubview(containerView)
         containerView.addSubview(contentStack)
+        containerView.addSubview(overlayAnimationView)
         
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: topAnchor),
@@ -81,6 +99,11 @@ final class InsightCard: UIView {
             contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
             contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
             contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
+            
+            overlayAnimationView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            overlayAnimationView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            overlayAnimationView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            overlayAnimationView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
         ])
     }
     
@@ -120,5 +143,19 @@ final class InsightCard: UIView {
         subtitleLabel.isHidden = subtitle == nil
         containerView.backgroundColor = backgroundColor
         self.onTap = onTap
+    }
+    
+    // MARK: - Overlay Animation
+    
+    /// Plays a one-time Lottie animation overlay on the card
+    /// - Parameter animationName: The name of the Lottie JSON file (without extension)
+    func playOverlayAnimation(named animationName: String) {
+        guard let animation = LottieAnimation.named(animationName) else { return }
+        
+        overlayAnimationView.animation = animation
+        overlayAnimationView.alpha = 1
+        overlayAnimationView.play { [weak self] _ in
+            self?.overlayAnimationView.alpha = 0
+        }
     }
 }
