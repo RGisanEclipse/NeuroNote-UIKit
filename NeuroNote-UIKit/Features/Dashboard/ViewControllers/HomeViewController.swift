@@ -6,7 +6,7 @@ class HomeViewController: UIViewController {
     // MARK: - UI
     
     private lazy var logMoodButton: UIView = {
-        let buttonSize: CGFloat = 44
+        let buttonSize: CGFloat = 56
         
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
@@ -26,7 +26,7 @@ class HomeViewController: UIViewController {
                 : UIColor.black.withAlphaComponent(0.15)
         }.cgColor
         
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let plusIcon = UIImage(systemName: "plus", withConfiguration: iconConfig)
         let iconView = UIImageView(image: plusIcon)
         iconView.translatesAutoresizingMaskIntoConstraints = false
@@ -313,14 +313,23 @@ class HomeViewController: UIViewController {
         
         UIView.animate(withDuration: 0.1, animations: { [weak self] in
             self?.logMoodButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
+        }) { [weak self] _ in
             UIView.animate(withDuration: 0.1) { [weak self] in
                 self?.logMoodButton.transform = .identity
             }
+            self?.presentMoodLogSheet()
         }
-        
-        // TODO: Navigate to mood logging screen
-        print("Log Mood tapped - navigate to mood entry")
+    }
+    
+    private func presentMoodLogSheet() {
+        MoodLogSheet.present(from: self) { [weak self] mood, reason in
+            self?.handleMoodLogged(mood: mood, reason: reason)
+        }
+    }
+    
+    private func handleMoodLogged(mood: Mood, reason: MoodReason?) {
+        // TODO: Save mood entry to backend/local storage
+        print("Mood logged: \(mood.label)" + (reason.map { ", reason: \($0.label)" } ?? ""))
     }
     
     // MARK: - Helpers
