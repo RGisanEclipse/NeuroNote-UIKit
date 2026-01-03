@@ -116,7 +116,7 @@ final class LottieCard: UIView {
     
     private func updateAppearance() {
         containerView.backgroundColor = traitCollection.userInterfaceStyle == .dark
-            ? UIColor(red: 0.14, green: 0.13, blue: 0.20, alpha: 1.0)
+            ? Constants.HomeViewControllerConstants.tileDarkModeColor
             : .white
     }
     

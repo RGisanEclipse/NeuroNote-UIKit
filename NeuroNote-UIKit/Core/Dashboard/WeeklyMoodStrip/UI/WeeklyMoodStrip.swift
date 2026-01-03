@@ -30,7 +30,7 @@ class WeeklyMoodStrip: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.14, green: 0.13, blue: 0.20, alpha: 1.0)
+                ? Constants.HomeViewControllerConstants.tileDarkModeColor
                 : .white
         }
         view.layer.cornerRadius = 20

@@ -31,7 +31,7 @@ class HomeViewController: UIViewController {
         }.cgColor
         
         let iconConfig = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
-        let plusIcon = UIImage(systemName: "plus", withConfiguration: iconConfig)
+        let plusIcon = UIImage(systemName: Constants.HomeViewControllerConstants.plusIconImageName, withConfiguration: iconConfig)
         let iconView = UIImageView(image: plusIcon)
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.tintColor = UIColor { traitCollection in
@@ -63,7 +63,7 @@ class HomeViewController: UIViewController {
     }()
     
     private lazy var backgroundAnimationView: LottieAnimationView = {
-        let animation = LottieAnimation.named("stars")
+        let animation = LottieAnimation.named(Constants.animations.stars)
         let view = LottieAnimationView(animation: animation)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.contentMode = .scaleAspectFill
@@ -91,7 +91,7 @@ class HomeViewController: UIViewController {
     private lazy var greetingLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "How was your day?"
+        label.text = Constants.HomeViewControllerConstants.greetingLabelText
         label.font = UIFont(name: Fonts.MontserratBold, size: 25) ?? .systemFont(ofSize: 25, weight: .medium)
         label.textColor = UIColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1.0)
         label.textAlignment = .center
@@ -102,7 +102,7 @@ class HomeViewController: UIViewController {
     private lazy var prefixLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Lately, I feel"
+        label.text = Constants.HomeViewControllerConstants.prefixLabelText
         label.font = UIFont(name: Fonts.MontserratMedium, size: 18) ?? .systemFont(ofSize: 18, weight: .light)
         label.textColor = .systemGray
         label.textAlignment = .center
@@ -150,8 +150,8 @@ class HomeViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
-                ? UIColor(red: 0.18, green: 0.15, blue: 0.25, alpha: 1.0) // Dark purple
-                : UIColor(red: 0.922, green: 0.910, blue: 0.988, alpha: 1.0) // Purplish-white
+                ? Constants.Colors.dashboardDarkPurple
+                :  Constants.Colors.dashboardLightPurple
         }
         view.layer.cornerRadius = 28
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner] // Only top corners rounded
@@ -219,9 +219,9 @@ class HomeViewController: UIViewController {
         let card = LottieCard()
         card.translatesAutoresizingMaskIntoConstraints = false
         card.configure(
-            topText: "Breathe",
-            bottomText: "Try out a 30 minute guided breathing exercise",
-            animationName: "meditating-brain"
+            topText: Constants.HomeViewControllerConstants.breatheCardTitle,
+            bottomText: Constants.HomeViewControllerConstants.breatheCardBottomText,
+            animationName: Constants.animations.meditatingBrain
         ) { [weak self] in
             self?.handleBreatheCardTapped()
         }
@@ -238,6 +238,7 @@ class HomeViewController: UIViewController {
     }()
     
     private lazy var streakInsightCard: InsightCard = {
+        // TODO: Fetch this component text and data from Backend
         let card = InsightCard()
         card.translatesAutoresizingMaskIntoConstraints = false
         card.configure(
@@ -361,7 +362,7 @@ class HomeViewController: UIViewController {
         if !hasShownStreakConfetti {
             hasShownStreakConfetti = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-                self?.streakInsightCard.playOverlayAnimation(named: "confetti")
+                self?.streakInsightCard.playOverlayAnimation(named: Constants.animations.confetti)
             }
         }
     }
@@ -391,12 +392,54 @@ class HomeViewController: UIViewController {
     private func handleMoodLogged(mood: Mood, reason: MoodReason?) {
         // TODO: Save mood entry to backend/local storage
         print("Mood logged: \(mood.label)" + (reason.map { ", reason: \($0.label)" } ?? ""))
+        presentInAppNotificationBanner(withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText)
+    }
+    
+    func presentInAppNotificationBanner(withText text: String) {
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.clipsToBounds = true
+        blurView.layer.cornerRadius = 14
+        blurView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        blurView.layer.borderWidth = 0.5
+
+        let label = UILabel()
+        label.text = text
+        label.textColor = .white
+        label.font = UIFont(name: Fonts.MontserratMedium, size: 14) ??
+            .systemFont(ofSize: 14, weight: .semibold)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+
+        blurView.contentView.addSubview(label)
+        let bannerHeight: CGFloat = 60
+        blurView.frame = CGRect(x: 16, y: -bannerHeight, width: view.frame.width - 32, height: bannerHeight)
+        label.frame = CGRect(x: 12, y: 0, width: blurView.frame.width - 24, height: bannerHeight)
+
+        view.addSubview(blurView)
+        UIView.animate(withDuration: 0.4,
+                       delay: 0,
+                       usingSpringWithDamping: 0.7,
+                       initialSpringVelocity: 0.8,
+                       options: .curveEaseOut) {
+            blurView.frame.origin.y = 60
+        }
+        
+        UIView.animate(withDuration: 0.3,
+                       delay: 3,
+                       options: .curveEaseIn,
+                       animations: {
+            blurView.frame.origin.y = -bannerHeight
+            blurView.alpha = 0
+        }) { _ in
+            blurView.removeFromSuperview()
+        }
     }
     
     // MARK: - Helpers
     
     private func getCurrentMoodAnimationName() -> String {
-        return "alien-in-rocket"
+        return Constants.animations.alienInRocket
     }
     
     private func getMoodColor() -> UIColor {
@@ -470,7 +513,7 @@ class HomeViewController: UIViewController {
             ]
             
             for i in 0..<7 {
-                let dayOffset = i - 5  // -5 to +1 from today
+                let dayOffset = i - 5
                 let date = calendar.date(byAdding: .day, value: dayOffset, to: today) ?? today
                 let day = calendar.component(.day, from: date)
                 
@@ -496,11 +539,13 @@ class HomeViewController: UIViewController {
     }
     
     private func handleBreatheCardTapped() {
+        // TODO: Navigate to BreathingViewController
         print("Breathe card tapped")
     }
     
     private func handleInsightCardTapped() {
-        print("Insight card tapped")
+        // Since this is the streak/infographic card, no action for this for now
+        return
     }
 }
 
