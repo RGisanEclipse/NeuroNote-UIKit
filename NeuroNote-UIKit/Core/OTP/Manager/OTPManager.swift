@@ -8,31 +8,28 @@ import Foundation
 
 final class OTPManager: OTPManagerProtocol {
     
-    private let networkService: NetworkService
     static let shared = OTPManager()
+    private let apiClient: APIClientProtocol
     
-    init(networkService: NetworkService = NetworkService()) {
-        self.networkService = networkService
+    init(apiClient: APIClientProtocol = APIClient.shared) {
+        self.apiClient = apiClient
     }
     
     // MARK: - Request OTP
+    
     @discardableResult
     func requestOTP(requestData: OTPRequestData, purpose: OTPPurpose) async throws -> OTPResponse {
         let endpoint = getRequestEndpoint(for: purpose)
-        let request = try makeRequest(urlPath: endpoint, body: requestData)
         
-        do {
-            let (data, response) = try await networkService.performRequest(request: request)
-            let httpResponse = try validate(response: response, data: data)
-            
-            // Check for error status codes first
-            if httpResponse.statusCode >= 400 {
-                throw try decodeAPIError(from: data)
-            }
-            
-            let apiResponse = try JSONDecoder().decode(SuccessAPIResponse.self, from: data)
+        let (apiResponse, httpResponse): (SuccessAPIResponse, HTTPURLResponse) = try await apiClient.requestWithResponse(
+            endpoint: endpoint,
+            method: .post,
+            body: requestData,
+            requiresAuth: false  // All OTP routes are public
+        )
+        
             guard apiResponse.success else {
-                throw try decodeAPIError(from: data)
+            throw APIClientError.invalidResponse
             }
             
             // For forgot password, save userId from cookie
@@ -41,92 +38,30 @@ final class OTPManager: OTPManagerProtocol {
             }
             
             return apiResponse.response
-            
-        } catch let error as URLError {
-            throw mapURLError(error)
-        } catch let apiError as APIError {
-            throw apiError
-        } catch let networkError as NetworkError {
-            throw networkError
-        } catch {
-            throw AuthError.unexpectedError
-        }
     }
     
     // MARK: - Verify OTP
+    
     @discardableResult
     func verifyOTP(_ code: String, userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
         let endpoint = getVerifyEndpoint(for: purpose)
-        let request = try makeRequest(urlPath: endpoint, body: OTPVerifyRequest(code: code, userId: userId))
+        let body = OTPVerifyRequest(code: code, userId: userId)
         
-        do {
-            let (data, response) = try await networkService.performRequest(request: request)
-            let httpResponse = try validate(response: response, data: data)
-            
-            // Check for error status codes first
-            if httpResponse.statusCode >= 400 {
-                throw try decodeAPIError(from: data)
-            }
-            
-            let apiResponse = try JSONDecoder().decode(SuccessAPIResponse.self, from: data)
-            guard apiResponse.success else {
-                throw try decodeAPIError(from: data)
-            }
-            
-            return apiResponse.response
-            
-        } catch let error as URLError {
-            throw mapURLError(error)
-        } catch let apiError as APIError {
-            Logger.shared.debug("OTP Verification Error", fields: [
-                "code": apiError.code,
-                "message": apiError.message
-            ])
-            throw apiError
-        } catch let networkError as NetworkError {
-            throw networkError
-        } catch {
-            Logger.shared.error("Unexpected OTP verification error", fields: [
-                "error": error.localizedDescription
-            ])
-            throw AuthError.unexpectedError
-        }
-    }
-    
-    // MARK: - Helpers
-    private func makeRequest<T: Encodable>(urlPath: String, body: T) throws -> URLRequest {
-        guard let url = URL(string: Routes.base + urlPath) else {
-            throw AuthError.badURL
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let apiResponse: SuccessAPIResponse = try await apiClient.request(
+            endpoint: endpoint,
+            method: .post,
+            body: body,
+            requiresAuth: false  // All OTP routes are public
+        )
         
-        if let token = KeychainHelper.standard.read(forKey: Constants.KeychainHelperKeys.authToken) {
-            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard apiResponse.success else {
+            throw APIClientError.invalidResponse
         }
         
-        request.timeoutInterval = 10
-        request.httpBody = try JSONEncoder().encode(body)
-        return request
+        return apiResponse.response
     }
     
-    private func validate(response: URLResponse, data: Data) throws -> HTTPURLResponse {
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthError.invalidResponse
-        }
-        Logger.shared.debug("OTP Response", fields: [
-            "statusCode": httpResponse.statusCode,
-            "body": String(data: data, encoding: .utf8) ?? "",
-            "request-id": httpResponse.value(forHTTPHeaderField: Constants.HTTPFields.requestId) ?? ""
-        ])
-        return httpResponse
-    }
-    
-    private func decodeAPIError(from data: Data) throws -> APIError {
-        let errorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
-        return errorResponse.error
-    }
+    // MARK: - Cookie Extraction
     
     private func extractUserIdCookie(from response: HTTPURLResponse) {
         guard
@@ -140,18 +75,7 @@ final class OTPManager: OTPManagerProtocol {
         }
     }
     
-    private func mapURLError(_ error: URLError) -> NetworkError {
-        switch error.code {
-        case .notConnectedToInternet, .networkConnectionLost:
-            return .noInternet
-        case .cannotFindHost, .cannotConnectToHost:
-            return .cannotReachServer
-        case .timedOut:
-            return .timeout
-        default:
-            return .generic(message: error.localizedDescription)
-        }
-    }
+    // MARK: - Endpoint Helpers
     
     private func getRequestEndpoint(for purpose: OTPPurpose) -> String {
         switch purpose {

@@ -17,7 +17,11 @@ class NetworkService {
         self.tokenManager = tokenManager
     }
 
-    func performRequest(request: URLRequest) async throws -> (Data, URLResponse) {
+    /// Performs a network request
+    /// - Parameters:
+    ///   - request: The URLRequest to perform
+    ///   - requiresAuth: If true, attempts token refresh on 401. If false, returns 401 as-is.
+    func performRequest(request: URLRequest, requiresAuth: Bool = true) async throws -> (Data, URLResponse) {
         var currentRequest = request
         var retries = 0
 
@@ -26,7 +30,8 @@ class NetworkService {
                 let (data, response) = try await session.data(for: currentRequest)
 
                 if let httpResponse = response as? HTTPURLResponse {
-                    if httpResponse.statusCode == 401 {
+                    // Only attempt token refresh for authenticated routes
+                    if httpResponse.statusCode == 401 && requiresAuth {
                         print("Token expired or unauthorized. Attempting to refresh token.")
                         do {
                             let (newAccessToken, _) = try await tokenManager.refreshToken()

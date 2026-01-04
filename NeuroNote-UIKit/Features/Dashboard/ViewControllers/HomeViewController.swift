@@ -3,6 +3,10 @@ import Lottie
 
 class HomeViewController: UIViewController {
     
+    // MARK: - ViewModel
+    
+    private let viewModel = HomeViewModel(moodManager: MoodManager())
+    
     // MARK: - State
     
     private var hasShownStreakConfetti = false
@@ -257,8 +261,35 @@ class HomeViewController: UIViewController {
         buildHierarchy()
         setupConstraints()
         registerForTraitChanges()
+        bindViewModel()
         fetchWeeklyMoodData()
         fetchInsightsData()
+    }
+    
+    // MARK: - ViewModel Binding
+    
+    private func bindViewModel() {
+        
+//        viewModel.onAsyncStart = { [weak self] in
+//             Could show a loading indicator on the log button if needed
+//        }
+//        
+//        viewModel.onAsyncEnd = { [weak self] in
+//             Hide loading indicator
+//        }
+        
+        viewModel.onLoggingSuccess = { [weak self] in
+            self?.presentInAppNotificationBanner(
+                withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText
+            )
+            // Refresh data after logging
+            self?.fetchInsightsData()
+            self?.fetchWeeklyMoodData()
+        }
+        
+        viewModel.onMessage = { [weak self] message in
+            self?.presentInAppNotificationBanner(withText: message)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -390,9 +421,11 @@ class HomeViewController: UIViewController {
     }
     
     private func handleMoodLogged(mood: Mood, reason: MoodReason?) {
-        // TODO: Save mood entry to backend/local storage
-        print("Mood logged: \(mood.label)" + (reason.map { ", reason: \($0.label)" } ?? ""))
-        presentInAppNotificationBanner(withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText)
+        let requestData = MoodLogData(
+            mood: mood.rawValue,
+            reason: reason?.rawValue
+        )
+        viewModel.handleMoodLog(with: requestData)
     }
     
     func presentInAppNotificationBanner(withText text: String) {

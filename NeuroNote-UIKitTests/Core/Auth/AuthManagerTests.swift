@@ -9,37 +9,21 @@ import XCTest
 
 final class AuthManagerTests: XCTestCase {
     var mockAuthManager = MockAuthManager()
+    var mockAPIClient: MockAPIClient!
+    
     override func setUp() {
         super.setUp()
         KeychainHelper.standard.clearTestKeys()
+        mockAPIClient = MockAPIClient()
     }
     
     override func tearDown() {
         super.tearDown()
         KeychainHelper.standard.clearTestKeys()
+        mockAPIClient.reset()
     }
     
-    // MARK: - Mock NetworkSession
-    class MockNetworkSession: NetworkSession {
-        var injectedURLError: URLError.Code?
-        var mockData: Data?
-        var mockResponse: URLResponse?
-        
-        func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-            if let code = injectedURLError {
-                throw URLError(code)
-            }
-            return (mockData ?? Data(), mockResponse ?? URLResponse())
-        }
-    }
-    
-    // MARK: - Happy-path helpers
-    private func makeHTTP200Response() -> HTTPURLResponse {
-        HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
-                        statusCode: 200,
-                        httpVersion: nil,
-                        headerFields: nil)!
-    }
+    // MARK: - Helper Methods
     
     private func makeMockJWT(userId: String) -> String {
         let payloadDict = ["user_id": userId]
@@ -52,103 +36,104 @@ final class AuthManagerTests: XCTestCase {
         return "header.\(base64).signature"
     }
     
-    /// Creates a success response matching the backend API structure
-    private func makeSuccessAuthResponse(token: String, isVerified: Bool, isOnboarded: Bool = true) -> Data {
-        let jsonString = """
-        {
-            "success": true,
-            "status": 200,
-            "response": {
-                "token": "\(token)",
-                "isVerified": \(isVerified),
-                "isOnboarded": \(isOnboarded)
-            }
-        }
-        """
-        return jsonString.data(using: .utf8)!
+    private func makeAuthAPIResponse(token: String, isVerified: Bool, isOnboarded: Bool = true) -> AuthAPIResponse {
+        return AuthAPIResponse(
+            success: true,
+            status: 200,
+            response: AuthResponseData(
+                token: token,
+                isVerified: isVerified,
+                isOnboarded: isOnboarded
+            )
+        )
     }
     
-    // MARK: - Happy-AuthCase test
+    private func makeHTTPResponse(withCookie: Bool = true) -> HTTPURLResponse {
+        var headers: [String: String]? = nil
+        if withCookie {
+            headers = ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"]
+        }
+        return HTTPURLResponse(
+            url: URL(string: "https://neuronote.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: headers
+        )!
+    }
+    
+    // MARK: - Happy-path Tests
+    
     func testAuthenticateReturnsTokenOnSuccess() async {
-        // Ensure clean keychain state
+        // Given
         KeychainHelper.standard.clearTestKeys()
-        
-        let mock = MockNetworkSession()
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: true)
+        mockAPIClient.mockResponseData = makeAuthAPIResponse(token: token, isVerified: true)
+        mockAPIClient.mockHTTPResponse = makeHTTPResponse()
         
-        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
-                                         statusCode: 200,
-                                         httpVersion: nil,
-                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
-        mock.mockResponse = httpResponse
+        let manager = AuthManager(apiClient: mockAPIClient)
         
-        let manager = AuthManager(session: mock)
-        
+        // When
         do {
             let session = try await manager.authenticate(
                 email: Constants.Tests.validEmail,
                 password: Constants.Tests.validPassword,
                 mode: .signin
             )
+            
+            // Then
             XCTAssertEqual(session.token, token)
             XCTAssertEqual(manager.currentToken(), token)
+            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signIn)
+            XCTAssertEqual(mockAPIClient.lastMethod, .post)
         } catch {
             XCTFail("Expected success but got error: \(error)")
         }
     }
     
     func testAuthenticateSignupSavesUserId() async {
-        // Ensure clean keychain state
+        // Given
         KeychainHelper.standard.clearTestKeys()
-        
-        let mock = MockNetworkSession()
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: true)
+        mockAPIClient.mockResponseData = makeAuthAPIResponse(token: token, isVerified: true)
+        mockAPIClient.mockHTTPResponse = makeHTTPResponse()
         
-        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
-                                         statusCode: 200,
-                                         httpVersion: nil,
-                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
-        mock.mockResponse = httpResponse
+        let manager = AuthManager(apiClient: mockAPIClient)
         
-        let manager = AuthManager(session: mock)
-        
+        // When
         do {
             let session = try await manager.authenticate(
                 email: Constants.Tests.validEmail,
                 password: Constants.Tests.validPassword,
                 mode: .signup
             )
+            
+            // Then
             XCTAssertEqual(session.token, token)
             XCTAssertEqual(manager.currentToken(), token)
-            // For signup mode, user ID should be saved to keychain
             XCTAssertEqual(manager.currentUser(), Constants.Tests.userId)
+            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signUp)
         } catch {
             XCTFail("Expected success but got error: \(error)")
         }
     }
     
     func testAuthenticateReturnsUnverifiedUserCorrectly() async {
-        let mock = MockNetworkSession()
+        // Given
         let token = makeMockJWT(userId: Constants.Tests.userId)
-        mock.mockData = makeSuccessAuthResponse(token: token, isVerified: false)
+        mockAPIClient.mockResponseData = makeAuthAPIResponse(token: token, isVerified: false)
+        mockAPIClient.mockHTTPResponse = makeHTTPResponse()
         
-        // Create a response with refresh token cookie
-        let httpResponse = HTTPURLResponse(url: URL(string: "https://neuronote.com")!,
-                                         statusCode: 200,
-                                         httpVersion: nil,
-                                         headerFields: ["Set-Cookie": "refreshToken=mock_refresh_token; Path=/; HttpOnly"])!
-        mock.mockResponse = httpResponse
+        let manager = AuthManager(apiClient: mockAPIClient)
         
-        let manager = AuthManager(session: mock)
-        
+        // When
         do {
             let session = try await manager.authenticate(
                 email: Constants.Tests.validEmail,
                 password: Constants.Tests.validPassword,
                 mode: .signin
             )
+            
+            // Then
             XCTAssertEqual(session.token, token)
             XCTAssertFalse(session.isVerified)
         } catch {
@@ -156,33 +141,14 @@ final class AuthManagerTests: XCTestCase {
         }
     }
     
-    func testUnexpectedErrorThrows() async {
-        struct BrokenSession: NetworkSession {
-            func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-                throw NSError(
-                    domain: "test",
-                    code: 999,
-                    userInfo: nil
-                )
-            }
-        }
-        let manager = AuthManager(session: BrokenSession())
-        
-        await XCTAssertThrowsErrorAsync(try await manager.authenticate(
-            email: Constants.Tests.validEmail,
-            password: Constants.Tests.validPassword,
-            mode: .signin
-        )) { error in
-            XCTAssertEqual(error as? AuthError, .unexpectedError)
-        }
-    }
+    // MARK: - Network Error Tests
     
-    // MARK: - NetworkError tests
-    func testNetworkConnectionLostMapsToNoInternet() async {
-        let mock = MockNetworkSession()
-        mock.injectedURLError = .networkConnectionLost
-        let manager = AuthManager(session: mock)
+    func testNetworkErrorNoInternet() async {
+        // Given
+        mockAPIClient.mockError = NetworkError.noInternet
+        let manager = AuthManager(apiClient: mockAPIClient)
         
+        // When & Then
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
@@ -194,11 +160,12 @@ final class AuthManagerTests: XCTestCase {
         }
     }
     
-    func testCannotFindHostMapsToCannotReachServer() async {
-        let mock = MockNetworkSession()
-        mock.injectedURLError = .cannotFindHost
-        let manager = AuthManager(session: mock)
+    func testNetworkErrorCannotReachServer() async {
+        // Given
+        mockAPIClient.mockError = NetworkError.cannotReachServer
+        let manager = AuthManager(apiClient: mockAPIClient)
         
+        // When & Then
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
@@ -210,11 +177,12 @@ final class AuthManagerTests: XCTestCase {
         }
     }
     
-    func testCannotConnectToHostMapsToCannotReachServer() async {
-        let mock = MockNetworkSession()
-        mock.injectedURLError = .cannotConnectToHost
-        let manager = AuthManager(session: mock)
+    func testNetworkErrorTimeout() async {
+        // Given
+        mockAPIClient.mockError = NetworkError.timeout
+        let manager = AuthManager(apiClient: mockAPIClient)
         
+        // When & Then
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
@@ -222,15 +190,18 @@ final class AuthManagerTests: XCTestCase {
                 mode: .signin
             )
         ) { error in
-            XCTAssertEqual(error as? NetworkError, .cannotReachServer)
+            XCTAssertEqual(error as? NetworkError, .timeout)
         }
     }
     
-    func testUnhandledURLErrorMapsToGeneric() async {
-        let mock = MockNetworkSession()
-        mock.injectedURLError = .badURL
-        let manager = AuthManager(session: mock)
+    // MARK: - API Error Tests
+    
+    func testAPIClientError() async {
+        // Given
+        mockAPIClient.mockError = APIClientError.unauthorized
+        let manager = AuthManager(apiClient: mockAPIClient)
         
+        // When & Then
         await XCTAssertThrowsErrorAsync(
             try await manager.authenticate(
                 email: Constants.Tests.validEmail,
@@ -238,13 +209,11 @@ final class AuthManagerTests: XCTestCase {
                 mode: .signin
             )
         ) { error in
-            guard case .generic(_) = error as? NetworkError else {
-                return XCTFail("Expected .generic NetworkError")
-            }
+            XCTAssertEqual(error as? APIClientError, .unauthorized)
         }
     }
     
-    // MARK: - Successful Reset Password Tests
+    // MARK: - Reset Password Tests (using MockAuthManager)
     
     func testResetPasswordSuccess() async {
         // Given
@@ -307,7 +276,7 @@ final class AuthManagerTests: XCTestCase {
         }
     }
     
-    // MARK: - Network Error Tests
+    // MARK: - Network Error Tests (Reset Password)
     
     func testResetPasswordWithNoInternetError() async {
         // Given
@@ -342,7 +311,7 @@ final class AuthManagerTests: XCTestCase {
         }
     }
     
-    // MARK: - API Error Tests
+    // MARK: - API Error Tests (Reset Password)
     
     func testResetPasswordWithAPIError() async {
         // Given
@@ -500,7 +469,7 @@ final class AuthManagerTests: XCTestCase {
     func testResetPasswordPerformance() {
         // Given
         let request = ResetPasswordRequest(userId: "test_user", password: "NewPassword123!")
-        mockAuthManager.resetPasswordDelay = 0.01 // Very fast for performance testing
+        mockAuthManager.resetPasswordDelay = 0.01
         
         // When & Then
         measure {

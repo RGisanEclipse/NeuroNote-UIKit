@@ -59,6 +59,8 @@ class OTPViewModel {
                 onOTPVerified?()
             } catch let apiError as APIError {
                 handleAPIError(apiError)
+            } catch let clientError as APIClientError {
+                handleClientError(clientError)
             } catch let networkError as NetworkError {
                 handleNetworkError(networkError)
             } catch {
@@ -80,6 +82,8 @@ class OTPViewModel {
                 startResendTimer()
             } catch _ as APIError {
                 onServerError?()
+            } catch let clientError as APIClientError {
+                handleClientError(clientError)
             } catch let networkError as NetworkError {
                 handleNetworkError(networkError)
             } catch {
@@ -101,5 +105,10 @@ class OTPViewModel {
     
     private func handleNetworkError(_ error: NetworkError) {
         onNetworkError?(error.presentation.title + "\n" + error.presentation.message)
+    }
+    
+    private func handleClientError(_ error: APIClientError) {
+        let presentation = error.presentation
+        onNetworkError?(presentation.title + "\n" + presentation.message)
     }
 }

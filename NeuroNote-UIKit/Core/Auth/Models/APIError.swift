@@ -25,4 +25,21 @@ struct APIError: Error, Equatable {
     var serverCode: ServerErrorCode {
         ServerErrorCode(rawValue: code) ?? .unknown
     }
+    
+    /// Returns the appropriate presentation for this error.
+    /// For known error codes, uses the mapped AlertContent.
+    /// For unknown codes, uses the actual server message.
+    var presentation: AlertContent {
+        let knownCode = ServerErrorCode(rawValue: code)
+        if let known = knownCode {
+            return known.presentation
+        }
+        // Unknown code - use actual server message
+        return AlertContent(
+            title: "Oops 😬",
+            message: message,
+            shouldBeRed: true,
+            animationName: Constants.animations.unsureStar
+        )
+    }
 }

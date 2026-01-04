@@ -81,11 +81,19 @@ class LaunchScreenViewController: UIViewController {
     }
 
     private func transitionToApp() {
-        let loginVC      = LoginViewController()
-        let navController = UINavigationController(rootViewController: loginVC)
-        navController.modalPresentationStyle = .fullScreen
-        navController.modalTransitionStyle   = .coverVertical
-        present(navController, animated: true)
+        let rootVC: UIViewController
+        
+        // Check if user has a valid session (refresh token exists)
+        if KeychainHelper.standard.getRefreshToken() != nil {
+            rootVC = DashboardTabBarController()
+        } else {
+            let loginVC = LoginViewController()
+            rootVC = UINavigationController(rootViewController: loginVC)
+        }
+        
+        rootVC.modalPresentationStyle = .fullScreen
+        rootVC.modalTransitionStyle = .coverVertical
+        present(rootVC, animated: true)
     }
 }
 

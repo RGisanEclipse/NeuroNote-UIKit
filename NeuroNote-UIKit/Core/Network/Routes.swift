@@ -19,4 +19,5 @@ enum Routes {
     static let resetPassword            = "/api/v1/auth/password/reset"
     static let refreshToken             = "/api/v1/auth/token/refresh"
     static let onboardUser              = "/api/v1/onboarding/onboard"
+    static let logMood                  = "/api/v1/mood"
 }

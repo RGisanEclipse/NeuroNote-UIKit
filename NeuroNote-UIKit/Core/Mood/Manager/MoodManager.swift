@@ -1,13 +1,13 @@
 //
-//  OnboardingManager.swift
+//  MoodManager.swift
 //  NeuroNote-UIKit
 //
-//  Created by Eclipse on 11/12/25.
+//  Created by Eclipse on 04/01/26.
 //
 
 import Foundation
 
-final class OnboardingManager: OnboardingManagerProtocol {
+final class MoodManager: MoodManagerProtocol {
     
     private let apiClient: APIClientProtocol
     
@@ -15,11 +15,11 @@ final class OnboardingManager: OnboardingManagerProtocol {
         self.apiClient = apiClient
     }
     
-    func onboardUser(onboardingData: OnboardingData) async throws {
+    func logMood(with data: MoodLogData) async throws {
         try await apiClient.requestSuccess(
-            endpoint: Routes.onboardUser,
+            endpoint: Routes.logMood,
             method: .post,
-            body: onboardingData
+            body: data
         )
     }
 }
