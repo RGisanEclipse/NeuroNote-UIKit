@@ -233,3 +233,6 @@ struct SuccessMessageData: Decodable {
 typealias AuthAPIResponse = APIResponse<AuthResponseData>
 typealias TokenRefreshAPIResponse = APIResponse<TokenRefreshData>
 typealias SuccessAPIResponse = APIResponse<SuccessMessageData>
+typealias DashboardAPIResponse = APIResponse<DashboardPayload>
+typealias MonthlyTopMoodsAPIResponse = APIResponse<MonthlyTopMoodsPayload>
+typealias WeeklyMoodStripAPIResponse = APIResponse<WeeklyMoodStripPayload>

@@ -17,8 +17,7 @@ final class MoodManager: MoodManagerProtocol {
     
     func logMood(with data: MoodLogData) async throws {
         try await apiClient.requestSuccess(
-            endpoint: Routes.logMood,
-            method: .post,
+            route: Routes.logMood,
             body: data
         )
     }

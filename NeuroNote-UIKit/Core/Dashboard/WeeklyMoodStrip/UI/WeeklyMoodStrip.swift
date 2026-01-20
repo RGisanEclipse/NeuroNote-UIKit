@@ -12,7 +12,7 @@ import UIKit
 enum WeeklyMoodStripState {
     case loading
     case loaded([DailyMoodCircleData])
-    case error(String)
+    case error
 }
 
 // MARK: - WeeklyMoodStrip
@@ -22,6 +22,7 @@ class WeeklyMoodStrip: UIView {
     // MARK: - Callbacks
     
     var onSeeMoreTapped: (() -> Void)?
+    var onRefreshTapped: (() -> Void)?
     
     // MARK: - UI Elements
     
@@ -95,6 +96,31 @@ class WeeklyMoodStrip: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+
+    // Error container
+    private let errorContainer: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.alpha = 0
+        return view
+    }()
+
+    private lazy var refreshButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(systemName: "arrow.clockwise")
+        config.cornerStyle = .capsule
+        config.baseBackgroundColor = .systemCyan
+        config.baseForegroundColor = .white
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
+        config.imagePlacement = .leading
+
+        button.configuration = config
+        button.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
+        return button
+    }()
     
     // MARK: - Properties
     
@@ -125,6 +151,8 @@ class WeeklyMoodStrip: UIView {
         contentContainer.addSubview(moodCirclesStack)
         cardView.addSubview(skeletonContainer)
         skeletonContainer.addSubview(skeletonStack)
+        cardView.addSubview(errorContainer)
+        errorContainer.addSubview(refreshButton)
         
         NSLayoutConstraint.activate([
             // Card fills parent
@@ -163,7 +191,17 @@ class WeeklyMoodStrip: UIView {
             skeletonStack.topAnchor.constraint(equalTo: skeletonContainer.topAnchor),
             skeletonStack.leadingAnchor.constraint(equalTo: skeletonContainer.leadingAnchor),
             skeletonStack.trailingAnchor.constraint(equalTo: skeletonContainer.trailingAnchor),
-            skeletonStack.bottomAnchor.constraint(equalTo: skeletonContainer.bottomAnchor)
+            skeletonStack.bottomAnchor.constraint(equalTo: skeletonContainer.bottomAnchor),
+
+            // Error container
+            errorContainer.topAnchor.constraint(equalTo: contentContainer.topAnchor),
+            errorContainer.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor),
+            errorContainer.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor),
+            errorContainer.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor),
+
+            // Refresh button
+            refreshButton.centerXAnchor.constraint(equalTo: errorContainer.centerXAnchor),
+            refreshButton.centerYAnchor.constraint(equalTo: errorContainer.centerYAnchor)
         ])
     }
     
@@ -221,6 +259,17 @@ class WeeklyMoodStrip: UIView {
         }
         onSeeMoreTapped?()
     }
+
+    @objc private func refreshTapped() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.refreshButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.refreshButton.transform = .identity
+            }
+        }
+        onRefreshTapped?()
+    }
     
     // MARK: - State Management
     
@@ -231,12 +280,12 @@ class WeeklyMoodStrip: UIView {
         case .loaded(let configurations):
             showContent(with: configurations)
         case .error:
-            // For now, just show empty state
-            showContent(with: [])
+            showError()
         }
     }
     
     private func showLoading() {
+        errorContainer.alpha = 0
         contentContainer.alpha = 0
         skeletonContainer.isHidden = false
         startSkeletonAnimation()
@@ -244,6 +293,7 @@ class WeeklyMoodStrip: UIView {
     
     private func showContent(with configurations: [DailyMoodCircleData]) {
         stopSkeletonAnimation()
+        errorContainer.alpha = 0
         
         // Clear existing circles
         moodCircles.forEach { $0.removeFromSuperview() }
@@ -261,6 +311,17 @@ class WeeklyMoodStrip: UIView {
         UIView.animate(withDuration: 0.3) {
             self.skeletonContainer.isHidden = true
             self.contentContainer.alpha = 1
+            self.errorContainer.alpha = 0
+        }
+    }
+
+    private func showError() {
+        stopSkeletonAnimation()
+        skeletonContainer.isHidden = true
+
+        UIView.animate(withDuration: 0.3) {
+            self.contentContainer.alpha = 0
+            self.errorContainer.alpha = 1
         }
     }
     

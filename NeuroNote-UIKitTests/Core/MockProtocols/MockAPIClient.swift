@@ -41,6 +41,24 @@ final class MockAPIClient: APIClientProtocol {
         
         return response
     }
+
+    func request<T: Decodable>(
+        route: Route,
+        body: Encodable?,
+        requiresAuth: Bool
+    ) async throws -> T {
+        trackRequest(endpoint: route.path, method: route.method, body: body)
+
+        if let error = mockError {
+            throw error
+        }
+
+        guard let response = mockResponseData as? T else {
+            throw APIClientError.invalidResponse
+        }
+
+        return response
+    }
     
     func requestSuccess(
         endpoint: String,
@@ -50,6 +68,18 @@ final class MockAPIClient: APIClientProtocol {
     ) async throws {
         trackRequest(endpoint: endpoint, method: method, body: body)
         
+        if let error = mockError {
+            throw error
+        }
+    }
+
+    func requestSuccess(
+        route: Route,
+        body: Encodable?,
+        requiresAuth: Bool
+    ) async throws {
+        trackRequest(endpoint: route.path, method: route.method, body: body)
+
         if let error = mockError {
             throw error
         }
@@ -78,6 +108,31 @@ final class MockAPIClient: APIClientProtocol {
             headerFields: nil
         )!
         
+        return (data: responseData, response: httpResponse)
+    }
+
+    func requestWithResponse<T: Decodable>(
+        route: Route,
+        body: Encodable?,
+        requiresAuth: Bool
+    ) async throws -> (data: T, response: HTTPURLResponse) {
+        trackRequest(endpoint: route.path, method: route.method, body: body)
+
+        if let error = mockError {
+            throw error
+        }
+
+        guard let responseData = mockResponseData as? T else {
+            throw APIClientError.invalidResponse
+        }
+
+        let httpResponse = mockHTTPResponse ?? HTTPURLResponse(
+            url: URL(string: "https://test.com")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+
         return (data: responseData, response: httpResponse)
     }
     

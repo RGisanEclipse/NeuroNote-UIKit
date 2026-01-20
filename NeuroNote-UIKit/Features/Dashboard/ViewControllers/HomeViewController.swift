@@ -5,7 +5,10 @@ class HomeViewController: UIViewController {
     
     // MARK: - ViewModel
     
-    private let viewModel = HomeViewModel(moodManager: MoodManager())
+    private let viewModel = HomeViewModel(
+        moodManager: MoodManager(),
+        dashboardManager: DashboardManager()
+    )
     
     // MARK: - State
     
@@ -195,7 +198,7 @@ class HomeViewController: UIViewController {
         let chart = InsightsChartView(skeletonCount: 3)
         chart.translatesAutoresizingMaskIntoConstraints = false
         chart.onRefreshTapped = { [weak self] in
-            self?.fetchInsightsData()
+            self?.refreshInsightsChart()
         }
         return chart
     }()
@@ -205,6 +208,9 @@ class HomeViewController: UIViewController {
         strip.translatesAutoresizingMaskIntoConstraints = false
         strip.onSeeMoreTapped = { [weak self] in
             self?.handleWeeklyMoodSeeMore()
+        }
+        strip.onRefreshTapped = { [weak self] in
+            self?.refreshWeeklyMoodStrip()
         }
         return strip
     }()
@@ -262,8 +268,7 @@ class HomeViewController: UIViewController {
         setupConstraints()
         registerForTraitChanges()
         bindViewModel()
-        fetchWeeklyMoodData()
-        fetchInsightsData()
+        fetchDashboardData()
     }
     
     // MARK: - ViewModel Binding
@@ -283,12 +288,19 @@ class HomeViewController: UIViewController {
                 withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText
             )
             // Refresh data after logging
-            self?.fetchInsightsData()
-            self?.fetchWeeklyMoodData()
+            self?.fetchDashboardData()
         }
         
         viewModel.onMessage = { [weak self] message in
             self?.presentInAppNotificationBanner(withText: message)
+        }
+        
+        viewModel.onInsightsState = { [weak self] state in
+            self?.insightsChartView.setState(state)
+        }
+        
+        viewModel.onWeeklyMoodState = { [weak self] state in
+            self?.weeklyMoodStrip.setState(state)
         }
     }
     
@@ -481,89 +493,16 @@ class HomeViewController: UIViewController {
     
     // MARK: - Data Fetching
     
-    private func fetchInsightsData() {
-        insightsChartView.setState(.loading)
-        
-        // TODO: Replace with actual API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            // Simulated success with sample data
-            let sampleData: [MoodInsightsChartViewData] = [
-                .init(
-                    label: "Happy",
-                    icon: UIImage(named: "happyFace"),
-                    color: UIColor(
-                        red: 0.95,
-                        green: 0.80,
-                        blue: 0.38,
-                        alpha: 1.0
-                    ),
-                    percentage: 0.7
-                ),
-                .init(
-                    label: "Discomfort",
-                    icon: UIImage(named: "disgustedFace"),
-                    color: UIColor(red: 0.55, green: 0.80, blue: 0.62, alpha: 1.0),
-                    percentage: 0.35
-                ),
-                .init(
-                    label: "Drained",
-                    icon: UIImage(named: "fearedFace"),
-                    color: UIColor(
-                        red: 0.63,
-                        green: 0.56,
-                        blue: 0.86,
-                        alpha: 1.0
-                    ),
-                    percentage: 0.5
-                ),
-            ]
-            
-            self?.insightsChartView.setState(.loaded(sampleData))
-        }
+    private func fetchDashboardData() {
+        viewModel.fetchDashboardData()
     }
-    
-    private func fetchWeeklyMoodData() {
-        weeklyMoodStrip.setState(.loading)
-        
-        // TODO: Replace with actual API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            // Get current date info for "today" highlighting
-            let calendar = Calendar.current
-            let today = Date()
-            
-            // Generate last 7 days
-            var configs: [DailyMoodCircleData] = []
-            
-            // Sample mood colors (replace with actual data)
-            let sampleColors: [UIColor?] = [
-                UIColor(red: 0.55, green: 0.85, blue: 0.9, alpha: 1.0),  // Calm
-                UIColor(red: 0.7, green: 0.9, blue: 0.6, alpha: 1.0),    // Happy
-                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Joy
-                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Joy
-                UIColor(red: 0.75, green: 0.7, blue: 0.9, alpha: 1.0),   // Neutral
-                UIColor(red: 0.95, green: 0.9, blue: 0.4, alpha: 1.0),   // Today
-                nil                                                       // Tomorrow
-            ]
-            
-            for i in 0..<7 {
-                let dayOffset = i - 5
-                let date = calendar.date(byAdding: .day, value: dayOffset, to: today) ?? today
-                let day = calendar.component(.day, from: date)
-                
-                let isToday = dayOffset == 0
-                let isFuture = dayOffset > 0
-                
-                configs.append(.init(
-                    date: "\(day)",
-                    moodColor: sampleColors[i],
-                    circleSize: 20,
-                    isToday: isToday,
-                    isFuture: isFuture
-                ))
-            }
-            
-            self?.weeklyMoodStrip.setState(.loaded(configs))
-        }
+
+    private func refreshInsightsChart() {
+        viewModel.refreshMonthlyMoodInsights()
+    }
+
+    private func refreshWeeklyMoodStrip() {
+        viewModel.refreshWeeklyMoodStrip()
     }
     
     private func handleWeeklyMoodSeeMore() {

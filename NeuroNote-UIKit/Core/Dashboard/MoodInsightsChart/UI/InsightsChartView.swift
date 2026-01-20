@@ -107,6 +107,8 @@ class InsightsChartView: UIView {
         label.font = UIFont(name: Fonts.MontserratMedium, size: 15) ?? .systemFont(ofSize: 15, weight: .medium)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
         return label
     }()
     

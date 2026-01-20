@@ -64,7 +64,7 @@ final class OTPManagerTests: XCTestCase {
         
         // Then
         XCTAssertTrue(result.success)
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestSignupOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestSignupOTP.path)
         XCTAssertEqual(mockAPIClient.lastMethod, .post)
     }
     
@@ -78,7 +78,7 @@ final class OTPManagerTests: XCTestCase {
         
         // Then
         XCTAssertTrue(result.success)
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifySignupOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifySignupOTP.path)
         XCTAssertEqual(mockAPIClient.lastMethod, .post)
     }
     
@@ -96,7 +96,7 @@ final class OTPManagerTests: XCTestCase {
         
         // Then
         XCTAssertTrue(result.success)
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestForgotPasswordOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestForgotPasswordOTP.path)
         XCTAssertEqual(mockAPIClient.lastMethod, .post)
     }
     
@@ -110,7 +110,7 @@ final class OTPManagerTests: XCTestCase {
         
         // Then
         XCTAssertTrue(result.success)
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifyForgotPasswordOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifyForgotPasswordOTP.path)
         XCTAssertEqual(mockAPIClient.lastMethod, .post)
     }
     
@@ -199,7 +199,7 @@ final class OTPManagerTests: XCTestCase {
         _ = try await otpManager.requestOTP(requestData: requestData, purpose: .Signup)
         
         // Then
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestSignupOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestSignupOTP.path)
     }
     
     func testForgotPasswordOTPUsesCorrectEndpoint() async throws {
@@ -212,7 +212,7 @@ final class OTPManagerTests: XCTestCase {
         _ = try await otpManager.requestOTP(requestData: requestData, purpose: .ForgotPassword)
         
         // Then
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestForgotPasswordOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.requestForgotPasswordOTP.path)
     }
     
     func testVerifySignupOTPUsesCorrectEndpoint() async throws {
@@ -224,7 +224,7 @@ final class OTPManagerTests: XCTestCase {
         _ = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .Signup)
         
         // Then
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifySignupOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifySignupOTP.path)
     }
     
     func testVerifyForgotPasswordOTPUsesCorrectEndpoint() async throws {
@@ -236,7 +236,7 @@ final class OTPManagerTests: XCTestCase {
         _ = try await otpManager.verifyOTP("123456", userId: "test_user", purpose: .ForgotPassword)
         
         // Then
-        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifyForgotPasswordOTP)
+        XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.verifyForgotPasswordOTP.path)
     }
     
     // MARK: - Request Count Tests

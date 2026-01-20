@@ -83,7 +83,7 @@ final class AuthManagerTests: XCTestCase {
             // Then
             XCTAssertEqual(session.token, token)
             XCTAssertEqual(manager.currentToken(), token)
-            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signIn)
+            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signIn.path)
             XCTAssertEqual(mockAPIClient.lastMethod, .post)
         } catch {
             XCTFail("Expected success but got error: \(error)")
@@ -111,7 +111,7 @@ final class AuthManagerTests: XCTestCase {
             XCTAssertEqual(session.token, token)
             XCTAssertEqual(manager.currentToken(), token)
             XCTAssertEqual(manager.currentUser(), Constants.Tests.userId)
-            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signUp)
+            XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.signUp.path)
         } catch {
             XCTFail("Expected success but got error: \(error)")
         }

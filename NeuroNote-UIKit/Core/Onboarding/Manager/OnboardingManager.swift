@@ -17,8 +17,7 @@ final class OnboardingManager: OnboardingManagerProtocol {
     
     func onboardUser(onboardingData: OnboardingData) async throws {
         try await apiClient.requestSuccess(
-            endpoint: Routes.onboardUser,
-            method: .post,
+            route: Routes.onboardUser,
             body: onboardingData
         )
     }

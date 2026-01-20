@@ -107,6 +107,45 @@ final class APIClient: APIClientProtocol {
         let decoded = try decoder.decode(T.self, from: data)
         return (data: decoded, response: httpResponse)
     }
+
+    func request<T: Decodable>(
+        route: Route,
+        body: Encodable? = nil,
+        requiresAuth: Bool = true
+    ) async throws -> T {
+        try await request(
+            endpoint: route.path,
+            method: route.method,
+            body: body,
+            requiresAuth: requiresAuth
+        )
+    }
+
+    func requestSuccess(
+        route: Route,
+        body: Encodable? = nil,
+        requiresAuth: Bool = true
+    ) async throws {
+        try await requestSuccess(
+            endpoint: route.path,
+            method: route.method,
+            body: body,
+            requiresAuth: requiresAuth
+        )
+    }
+
+    func requestWithResponse<T: Decodable>(
+        route: Route,
+        body: Encodable? = nil,
+        requiresAuth: Bool = false
+    ) async throws -> (data: T, response: HTTPURLResponse) {
+        try await requestWithResponse(
+            endpoint: route.path,
+            method: route.method,
+            body: body,
+            requiresAuth: requiresAuth
+        )
+    }
     
     // MARK: - Request Builder
     

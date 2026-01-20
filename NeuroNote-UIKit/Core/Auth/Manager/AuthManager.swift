@@ -20,7 +20,7 @@ final class AuthManager: AuthManagerProtocol {
         case signup
         case signin
 
-        var path: String {
+        var route: Route {
             switch self {
             case .signup: return Routes.signUp
             case .signin: return Routes.signIn
@@ -41,8 +41,7 @@ final class AuthManager: AuthManagerProtocol {
         let body = AuthRequest(email: email, password: password, deviceId: deviceId)
         
         let (apiResponse, httpResponse): (AuthAPIResponse, HTTPURLResponse) = try await apiClient.requestWithResponse(
-            endpoint: mode.path,
-            method: .post,
+            route: mode.route,
             body: body,
             requiresAuth: false
         )
@@ -75,8 +74,7 @@ final class AuthManager: AuthManagerProtocol {
     
     func resetPassword(payload: ResetPasswordRequest) async throws -> Bool {
         let (apiResponse, _): (SuccessAPIResponse, HTTPURLResponse) = try await apiClient.requestWithResponse(
-            endpoint: Routes.resetPassword,
-            method: .post,
+            route: Routes.resetPassword,
             body: payload,
             requiresAuth: false
         )

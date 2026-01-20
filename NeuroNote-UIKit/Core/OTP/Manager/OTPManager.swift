@@ -19,11 +19,10 @@ final class OTPManager: OTPManagerProtocol {
     
     @discardableResult
     func requestOTP(requestData: OTPRequestData, purpose: OTPPurpose) async throws -> OTPResponse {
-        let endpoint = getRequestEndpoint(for: purpose)
+        let route = getRequestRoute(for: purpose)
         
         let (apiResponse, httpResponse): (SuccessAPIResponse, HTTPURLResponse) = try await apiClient.requestWithResponse(
-            endpoint: endpoint,
-            method: .post,
+            route: route,
             body: requestData,
             requiresAuth: false  // All OTP routes are public
         )
@@ -44,12 +43,11 @@ final class OTPManager: OTPManagerProtocol {
     
     @discardableResult
     func verifyOTP(_ code: String, userId: String, purpose: OTPPurpose) async throws -> OTPResponse {
-        let endpoint = getVerifyEndpoint(for: purpose)
+        let route = getVerifyRoute(for: purpose)
         let body = OTPVerifyRequest(code: code, userId: userId)
         
         let apiResponse: SuccessAPIResponse = try await apiClient.request(
-            endpoint: endpoint,
-            method: .post,
+            route: route,
             body: body,
             requiresAuth: false  // All OTP routes are public
         )
@@ -77,7 +75,7 @@ final class OTPManager: OTPManagerProtocol {
     
     // MARK: - Endpoint Helpers
     
-    private func getRequestEndpoint(for purpose: OTPPurpose) -> String {
+    private func getRequestRoute(for purpose: OTPPurpose) -> Route {
         switch purpose {
         case .Signup:
             return Routes.requestSignupOTP
@@ -86,7 +84,7 @@ final class OTPManager: OTPManagerProtocol {
         }
     }
     
-    private func getVerifyEndpoint(for purpose: OTPPurpose) -> String {
+    private func getVerifyRoute(for purpose: OTPPurpose) -> Route {
         switch purpose {
         case .Signup:
             return Routes.verifySignupOTP
