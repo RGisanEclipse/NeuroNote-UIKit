@@ -10,6 +10,7 @@ import UIKit
 enum InsightsChartViewState {
     case loading
     case loaded([MoodInsightsChartViewData])
+    case empty
     case error(String)
 }
 

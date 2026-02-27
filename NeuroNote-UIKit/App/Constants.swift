@@ -51,6 +51,7 @@ struct Constants{
         static let lockSuccess     = "lock-success"
         static let stars           = "stars"
         static let meditatingBrain = "meditating-brain"
+        static let emptyBox = "empty-box"
     }
     struct LaunchScreenConstants {
         

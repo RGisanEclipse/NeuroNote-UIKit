@@ -92,8 +92,12 @@ class HomeViewModel{
                 let payload = try await dashboardManager.fetchDashboard()
                 let insightsData = makeInsightsViewData(from: payload.monthlyTopMoods)
                 let weeklyData = makeWeeklyMoodData(from: payload.weeklyMoodStrip)
-                
-                onInsightsState?(.loaded(insightsData))
+
+                if insightsData.isEmpty {
+                    onInsightsState?(.empty)
+                } else {
+                    onInsightsState?(.loaded(insightsData))
+                }
                 onWeeklyMoodState?(.loaded(weeklyData))
             } catch {
                 let errorMessage = message(for: error)
@@ -112,7 +116,11 @@ class HomeViewModel{
             do {
                 let monthlyMoods = try await dashboardManager.fetchMonthlyTopMoods()
                 let insightsData = makeInsightsViewData(from: monthlyMoods)
-                onInsightsState?(.loaded(insightsData))
+                if insightsData.isEmpty {
+                    onInsightsState?(.empty)
+                } else {
+                    onInsightsState?(.loaded(insightsData))
+                }
             } catch {
                 let errorMessage = message(for: error)
                 onMessage?(errorMessage)
