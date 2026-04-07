@@ -1,7 +1,6 @@
 project "NeuroNote-UIKit.xcodeproj"
 scheme "NeuroNote-UIKit"
-sdk "iphonesimulator"
-device "iPhone 16 Pro"
+destination "platform=iOS Simulator,name=iPhone 17 Pro"
 code_coverage true
 xcargs "-parallelizeTargets"
 derived_data_path "Build/"
