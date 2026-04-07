@@ -7,6 +7,14 @@
 
 import UIKit
 
+// MARK: - Dominant Mood State
+
+enum DominantMoodState {
+    case loaded(label: String, color: UIColor)
+    case unavailableNoData
+    case unavailableNetworkError
+}
+
 @MainActor
 class HomeViewModel{
     // MARK: - CallBacks
@@ -16,6 +24,8 @@ class HomeViewModel{
     var onAsyncEnd: (() -> Void)?
     var onInsightsState: ((InsightsChartViewState) -> Void)?
     var onWeeklyMoodState: ((WeeklyMoodStripState) -> Void)?
+    var onDominantMoodState: ((DominantMoodState) -> Void)?
+    var onStreakUpdate: ((Int) -> Void)?
     
     // MARK: - Dependencies
     private let moodManager: MoodManagerProtocol
@@ -95,14 +105,23 @@ class HomeViewModel{
 
                 if insightsData.isEmpty {
                     onInsightsState?(.empty)
+                    onDominantMoodState?(.unavailableNoData)
                 } else {
                     onInsightsState?(.loaded(insightsData))
+                    let sorted = insightsData.sorted { $0.percentage > $1.percentage }
+                    if let dominant = sorted.first {
+                        onDominantMoodState?(.loaded(label: dominant.label, color: dominant.color))
+                    } else {
+                        onDominantMoodState?(.unavailableNoData)
+                    }
                 }
                 onWeeklyMoodState?(.loaded(weeklyData))
+                onStreakUpdate?(payload.streakWidget.currentStreak)
             } catch {
                 let errorMessage = message(for: error)
                 onWeeklyMoodState?(.error)
                 onInsightsState?(.error(errorMessage))
+                onDominantMoodState?(.unavailableNetworkError)
             }
         }
     }
@@ -118,13 +137,21 @@ class HomeViewModel{
                 let insightsData = makeInsightsViewData(from: monthlyMoods)
                 if insightsData.isEmpty {
                     onInsightsState?(.empty)
+                    onDominantMoodState?(.unavailableNoData)
                 } else {
                     onInsightsState?(.loaded(insightsData))
+                    let sorted = insightsData.sorted { $0.percentage > $1.percentage }
+                    if let dominant = sorted.first {
+                        onDominantMoodState?(.loaded(label: dominant.label, color: dominant.color))
+                    } else {
+                        onDominantMoodState?(.unavailableNoData)
+                    }
                 }
             } catch {
                 let errorMessage = message(for: error)
                 onMessage?(errorMessage)
                 onInsightsState?(.error(errorMessage))
+                onDominantMoodState?(.unavailableNetworkError)
             }
         }
     }

@@ -35,7 +35,8 @@ final class DashboardManagerTests: XCTestCase {
         let payload: DashboardPayload = try decode("""
         {
           "monthlyTopMoods": [{"mood":"happy","percentage":50}],
-          "weeklyMoodStrip": {"2026-01-18":"happy"}
+          "weeklyMoodStrip": {"2026-01-18":"happy"},
+          "streakWidget": {"currentStreak":3,"longestStreak":5,"lastActiveDate":1775520000}
         }
         """)
         mockAPIClient.mockResponseData = DashboardAPIResponse(
@@ -48,6 +49,27 @@ final class DashboardManagerTests: XCTestCase {
 
         XCTAssertEqual(mockAPIClient.lastEndpoint, Routes.dashboard.path)
         XCTAssertEqual(mockAPIClient.lastMethod, Routes.dashboard.method)
+    }
+
+    func testFetchDashboardDecodesStreakWidget() async throws {
+        let payload: DashboardPayload = try decode("""
+        {
+          "monthlyTopMoods": [{"mood":"happy","percentage":66.67}],
+          "weeklyMoodStrip": {"2026-04-07":"happy"},
+          "streakWidget": {"currentStreak":1,"longestStreak":1,"lastActiveDate":1775520000}
+        }
+        """)
+        mockAPIClient.mockResponseData = DashboardAPIResponse(
+            success: true,
+            status: 200,
+            response: payload
+        )
+
+        let result = try await dashboardManager.fetchDashboard()
+
+        XCTAssertEqual(result.streakWidget.currentStreak, 1)
+        XCTAssertEqual(result.streakWidget.longestStreak, 1)
+        XCTAssertEqual(result.streakWidget.lastActiveDate, 1775520000)
     }
 
     func testFetchMonthlyTopMoodsUsesRoute() async throws {

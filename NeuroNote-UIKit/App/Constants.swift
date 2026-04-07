@@ -51,7 +51,8 @@ struct Constants{
         static let lockSuccess     = "lock-success"
         static let stars           = "stars"
         static let meditatingBrain = "meditating-brain"
-        static let emptyBox = "empty-box"
+        static let emptyBox        = "empty-box"
+        static let noInternet      = "no-internet"
     }
     struct LaunchScreenConstants {
         
@@ -102,6 +103,9 @@ struct Constants{
         static let breatheCardBottomText  = "Try out a 30 minute guided breathing exercise"
         static let moodLoggingSuccessText = "Mood logged!\nThank you for checking in.🌱"
         static let tileDarkModeColor      = UIColor(red: 0.14, green: 0.13, blue: 0.20, alpha: 1.0)
+        static let dominantMoodUnavailablePrefix = "Server has been invaded,\nHang on until we fix it!"
+        static let dominantMoodEmptyPrefix       = "Track your moods,\nwe’ll reflect them back to you"
+        static let dominantMoodPlaceholder      = "—"
     }
     
     struct Colors {

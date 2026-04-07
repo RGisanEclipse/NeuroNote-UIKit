@@ -114,6 +114,7 @@ class HomeViewController: UIViewController {
         label.textColor = .systemGray
         label.textAlignment = .center
         label.alpha = 0
+        label.numberOfLines = 0
         return label
     }()
     
@@ -248,11 +249,10 @@ class HomeViewController: UIViewController {
     }()
     
     private lazy var streakInsightCard: InsightCard = {
-        // TODO: Fetch this component text and data from Backend
         let card = InsightCard()
         card.translatesAutoresizingMaskIntoConstraints = false
         card.configure(
-            text: "You've checked in 3 days this week!",
+            text: "–",
             backgroundColor: UIColor(red: 0.45, green: 0.36, blue: 0.65, alpha: 1.0)
         ) { [weak self] in
             self?.handleInsightCardTapped()
@@ -301,6 +301,57 @@ class HomeViewController: UIViewController {
         
         viewModel.onWeeklyMoodState = { [weak self] state in
             self?.weeklyMoodStrip.setState(state)
+        }
+        
+        viewModel.onDominantMoodState = { [weak self] state in
+            self?.applyDominantMoodState(state)
+        }
+
+        viewModel.onStreakUpdate = { [weak self] streak in
+            self?.updateStreakCard(streak: streak)
+        }
+    }
+    
+    private func applyDominantMoodState(_ state: DominantMoodState) {
+        switch state {
+        case .loaded(let label, let color):
+            prefixLabel.text = Constants.HomeViewControllerConstants.prefixLabelText
+            moodCasinoLabel.updateText(label, color: color)
+            moodCasinoLabel.resetAnimation()
+            moodCasinoLabel.startAnimation()
+            if let animation = LottieAnimation.named(animationName(for: label)) {
+                moodAnimationView.animation = animation
+                moodAnimationView.play()
+            }
+        case .unavailableNoData:
+            prefixLabel.text = Constants.HomeViewControllerConstants.dominantMoodEmptyPrefix
+            moodCasinoLabel.updateText(Constants.HomeViewControllerConstants.dominantMoodPlaceholder, color: .secondaryLabel)
+            moodCasinoLabel.resetAnimation()
+            moodCasinoLabel.startAnimation()
+            if let animation = LottieAnimation.named(Constants.animations.alienInRocket) {
+                moodAnimationView.animation = animation
+                moodAnimationView.play()
+            }
+        case .unavailableNetworkError:
+            prefixLabel.text = Constants.HomeViewControllerConstants.dominantMoodUnavailablePrefix
+            moodCasinoLabel.updateText(Constants.HomeViewControllerConstants.dominantMoodPlaceholder, color: .secondaryLabel)
+            moodCasinoLabel.resetAnimation()
+            moodCasinoLabel.startAnimation()
+            if let animation = LottieAnimation.named(Constants.animations.noInternet) {
+                moodAnimationView.animation = animation
+                moodAnimationView.play()
+            }
+        }
+    }
+    
+    private func animationName(for moodLabel: String) -> String {
+        let normalized = moodLabel.lowercased()
+        switch normalized {
+        case "happy": return Constants.animations.alienInRocket
+        case "down": return Constants.animations.sadAlien
+        case "frustrated": return Constants.animations.angryAlien
+        case "surprised", "uncomfortable", "worried": return Constants.animations.confusedAlien
+        default: return Constants.animations.alienInRocket
         }
     }
     
@@ -482,7 +533,19 @@ class HomeViewController: UIViewController {
     }
     
     // MARK: - Helpers
-    
+
+    private func updateStreakCard(streak: Int) {
+        let text = streak <= 1
+            ? "Every streak starts with day one. You've got this!"
+            : "You've checked in \(streak) days in a row. Keep it up!"
+        streakInsightCard.configure(
+            text: text,
+            backgroundColor: UIColor(red: 0.45, green: 0.36, blue: 0.65, alpha: 1.0)
+        ) { [weak self] in
+            self?.handleInsightCardTapped()
+        }
+    }
+
     private func getCurrentMoodAnimationName() -> String {
         return Constants.animations.alienInRocket
     }

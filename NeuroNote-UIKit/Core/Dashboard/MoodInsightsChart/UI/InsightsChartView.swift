@@ -53,9 +53,9 @@ class InsightsChartView: UIView {
         let stack = UIStackView()
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .horizontal
-        stack.spacing = 24
+        stack.spacing = 16
         stack.alignment = .center
-        stack.distribution = .fillEqually
+        stack.distribution = .fill
         return stack
     }()
     
@@ -468,6 +468,10 @@ class InsightsChartView: UIView {
         labelView.text = label
         labelView.font = UIFont(name: Fonts.MontserratMedium, size: 13) ?? .systemFont(ofSize: 13, weight: .medium)
         labelView.textColor = .secondaryLabel
+        labelView.adjustsFontSizeToFitWidth = true
+        labelView.minimumScaleFactor = 0.65
+        labelView.numberOfLines = 1
+        labelView.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
         container.addSubview(dot)
         container.addSubview(labelView)

@@ -12,9 +12,9 @@ import UIKit
 class CasinoTextLabel: UIView {
     
     // MARK: - Configuration
-    private let targetText: String
+    private var targetText: String
     private let font: UIFont
-    private let textColor: UIColor
+    private var textColor: UIColor
     private let letterSpacing: CGFloat
     private let rollDuration: TimeInterval
     private let staggerDelay: TimeInterval
@@ -155,6 +155,25 @@ class CasinoTextLabel: UIView {
             label.alpha = 0
             label.transform = .identity
         }
+    }
+    
+    /// Updates the displayed text and color, then resets so animation can be run again.
+    func updateText(_ text: String, color: UIColor) {
+        stopAllAnimations()
+        targetText = text.uppercased()
+        textColor = color
+        
+        letterLabels.forEach { $0.removeFromSuperview() }
+        letterLabels.removeAll()
+        
+        guard let stack = stackView else { return }
+        for char in targetText {
+            let label = createLetterLabel(String(char))
+            letterLabels.append(label)
+            stack.addArrangedSubview(label)
+        }
+        
+        resetAnimation()
     }
     
     @objc private func updateLetter(_ displayLink: CADisplayLink) {

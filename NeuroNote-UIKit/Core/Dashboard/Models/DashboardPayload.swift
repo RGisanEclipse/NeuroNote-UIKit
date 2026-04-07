@@ -10,6 +10,13 @@ import Foundation
 struct DashboardPayload: Decodable {
     let monthlyTopMoods: [MonthlyMood]
     let weeklyMoodStrip: [String: String?]
+    let streakWidget: StreakWidget
+}
+
+struct StreakWidget: Decodable {
+    let currentStreak: Int
+    let longestStreak: Int
+    let lastActiveDate: TimeInterval
 }
 
 struct MonthlyMood: Decodable {
