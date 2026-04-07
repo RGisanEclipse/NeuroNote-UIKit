@@ -72,7 +72,11 @@ class ResetPasswordViewModel {
         Logger.shared.error("Password Reset Error", fields: logFields)
         
         if let apiError = error as? APIError {
-            return apiError.serverCode.presentation
+            return apiError.presentation
+        }
+        
+        if let clientError = error as? APIClientError {
+            return clientError.presentation
         }
         
         if let networkErr = error as? NetworkError {

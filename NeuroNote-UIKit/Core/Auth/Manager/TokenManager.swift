@@ -35,7 +35,7 @@ final class TokenManager: TokenManagerProtocol {
         let deviceId = KeychainHelper.standard.getOrCreateDeviceId()
         
         let request = try makeRequest(
-            path: Routes.refreshToken,
+            path: Routes.refreshToken.path,
             body: RefreshTokenRequest(refresh_token: refreshToken, deviceID: deviceId)
         )
 

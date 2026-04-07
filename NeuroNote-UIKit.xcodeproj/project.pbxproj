@@ -39,20 +39,28 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/OTP/Models/OTPPurpose.swift,
+				"Core/UI/LottieAnimations/alien-in-rocket.json",
+				"Core/UI/LottieAnimations/angry-alien.json",
 				"Core/UI/LottieAnimations/angry-star.json",
 				"Core/UI/LottieAnimations/birdie-success.json",
 				Core/UI/LottieAnimations/clouds.json,
+				Core/UI/LottieAnimations/confetti.json,
+				"Core/UI/LottieAnimations/confused-alien.json",
 				"Core/UI/LottieAnimations/female-avatar.json",
 				"Core/UI/LottieAnimations/happy-sun.json",
 				Core/UI/LottieAnimations/jetpack.json,
+				"Core/UI/LottieAnimations/joyful-sky.json",
 				"Core/UI/LottieAnimations/loading-dots.json",
 				"Core/UI/LottieAnimations/lock-success.json",
 				"Core/UI/LottieAnimations/male-avatar.json",
+				"Core/UI/LottieAnimations/meditating-brain.json",
 				"Core/UI/LottieAnimations/night-sky.json",
 				"Core/UI/LottieAnimations/no-wifi.json",
 				"Core/UI/LottieAnimations/otp-chair.json",
 				Core/UI/LottieAnimations/plane.json,
 				"Core/UI/LottieAnimations/rotating-moon.json",
+				"Core/UI/LottieAnimations/sad-alien.json",
+				Core/UI/LottieAnimations/stars.json,
 				"Core/UI/LottieAnimations/unsure-star.json",
 			);
 			target = B920E3062E1F842000AD6C65 /* NeuroNote-UIKitTests */;
@@ -267,6 +275,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -294,6 +303,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -439,6 +449,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2TSUVG2N5M;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.eclipse.NeuroNote-UIKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -459,6 +470,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2TSUVG2N5M;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.eclipse.NeuroNote-UIKitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";

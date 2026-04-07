@@ -27,7 +27,7 @@ class AuthSuccessView: UIView {
         label.text = "Entry Granted"
         label.numberOfLines = 0
         label.font = UIFont(
-            name: Fonts.BeachDay,
+            name: Fonts.MontserratAlternates,
             size: 30
         ) ?? UIFont.systemFont(ofSize: 30, weight: .medium)
         label.textColor = .white
@@ -88,7 +88,8 @@ class AuthSuccessView: UIView {
 
     // MARK: - Animate In and Play
     private func animateInAndPlay() {
-        self.transform = CGAffineTransform(translationX: UIScreen.main.bounds.width, y: 0)
+        let screenWidth = window?.windowScene?.screen.bounds.width ?? bounds.width
+        self.transform = CGAffineTransform(translationX: screenWidth, y: 0)
         self.alpha = 0
 
         UIView.animate(
@@ -107,7 +108,7 @@ class AuthSuccessView: UIView {
 
     // MARK: - AnimationView Logic
     private func loadAndPlayAnimation() {
-        let animationName = "lock-success"
+        let animationName = Constants.animations.lockSuccess
         
         guard
             let animationURL = Bundle.main.url(forResource: animationName, withExtension: "json"),

@@ -11,3 +11,6 @@ Build/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store

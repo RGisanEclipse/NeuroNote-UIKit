@@ -52,9 +52,14 @@ class OnboardingViewModel {
                 onOnboardingSuccess?()
                 
             } catch let apiError as APIError {
-                let alertContent = apiError.serverCode.presentation
+                let alertContent = apiError.presentation
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(alertContent)
+                }
+                
+            } catch let clientError as APIClientError {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.onMessage?(clientError.presentation)
                 }
                 
             } catch let networkError as NetworkError {

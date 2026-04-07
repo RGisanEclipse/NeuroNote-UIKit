@@ -530,10 +530,11 @@ class LoginViewController: UIViewController {
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 if isOnboarded {
-                    // TODO: Navigate to dashboard
-                    
+                    let dashboardVC = DashboardTabBarController()
+                    dashboardVC.modalPresentationStyle = .fullScreen
+                    dashboardVC.modalTransitionStyle = .coverVertical
+                    self.present(dashboardVC, animated: true)
                 } else {
-                    // TODO: Navigate to onboarding
                     let onboardingVC = OnboardingViewController()
                     onboardingVC.modalPresentationStyle = .fullScreen
                     onboardingVC.modalTransitionStyle = .coverVertical
