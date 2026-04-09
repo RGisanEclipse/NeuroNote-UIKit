@@ -252,7 +252,7 @@ class HomeViewController: UIViewController {
         let card = InsightCard()
         card.translatesAutoresizingMaskIntoConstraints = false
         card.configure(
-            text: "–",
+            text: Constants.empty,
             backgroundColor: UIColor(red: 0.45, green: 0.36, blue: 0.65, alpha: 1.0)
         ) { [weak self] in
             self?.handleInsightCardTapped()
@@ -583,8 +583,9 @@ class HomeViewController: UIViewController {
     }
     
     private func handleBreatheCardTapped() {
-        // TODO: Navigate to BreathingViewController
-        print("Breathe card tapped")
+        let vc = BreathingActivityViewController()
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
     }
     
     private func handleInsightCardTapped() {

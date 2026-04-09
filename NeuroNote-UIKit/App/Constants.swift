@@ -53,6 +53,7 @@ struct Constants{
         static let meditatingBrain = "meditating-brain"
         static let emptyBox        = "empty-box"
         static let noInternet      = "no-internet"
+        static let breathing       = "breathing"
     }
     struct LaunchScreenConstants {
         
@@ -100,7 +101,7 @@ struct Constants{
         static let greetingLabelText      = "How was your day?"
         static let prefixLabelText        = "Lately, I feel"
         static let breatheCardTitle       = "Breathe"
-        static let breatheCardBottomText  = "Try out a 30 minute guided breathing exercise"
+        static let breatheCardBottomText  = "Try out a quick guided breathing exercise"
         static let moodLoggingSuccessText = "Mood logged!\nThank you for checking in.🌱"
         static let tileDarkModeColor      = UIColor(red: 0.14, green: 0.13, blue: 0.20, alpha: 1.0)
         static let dominantMoodUnavailablePrefix = "Server has been invaded,\nHang on until we fix it!"
