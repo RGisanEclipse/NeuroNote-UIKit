@@ -7,19 +7,19 @@
 
 import Foundation
 
-struct DashboardPayload: Decodable {
+struct DashboardPayload: Codable {
     let monthlyTopMoods: [MonthlyMood]
     let weeklyMoodStrip: [String: String?]
     let streakWidget: StreakWidget
 }
 
-struct StreakWidget: Decodable {
+struct StreakWidget: Codable {
     let currentStreak: Int
     let longestStreak: Int
     let lastActiveDate: TimeInterval
 }
 
-struct MonthlyMood: Decodable {
+struct MonthlyMood: Codable {
     let mood: String
     let percentage: Double
 }

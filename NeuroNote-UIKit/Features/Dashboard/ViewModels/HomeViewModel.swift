@@ -16,8 +16,8 @@ enum DominantMoodState {
 }
 
 @MainActor
-class HomeViewModel{
-    // MARK: - CallBacks
+class HomeViewModel {
+    // MARK: - Callbacks
     var onMessage: ((String) -> Void)?
     var onLoggingSuccess: (() -> Void)?
     var onAsyncStart: (() -> Void)?
@@ -26,33 +26,57 @@ class HomeViewModel{
     var onWeeklyMoodState: ((WeeklyMoodStripState) -> Void)?
     var onDominantMoodState: ((DominantMoodState) -> Void)?
     var onStreakUpdate: ((Int) -> Void)?
-    
+    var onStreakVisibilityChange: ((Bool) -> Void)?
+
     // MARK: - Dependencies
     private let moodManager: MoodManagerProtocol
     private let dashboardManager: DashboardManagerProtocol
-    
-    // MARK: - init
+    private let dashboardCache: DashboardCacheService
+    private let pendingMoodLogService: PendingMoodLogService
+
+    // MARK: - Init
     init(
         moodManager: MoodManagerProtocol,
-        dashboardManager: DashboardManagerProtocol
+        dashboardManager: DashboardManagerProtocol,
+        dashboardCache: DashboardCacheService = DashboardCacheService(),
+        pendingMoodLogService: PendingMoodLogService = PendingMoodLogService()
     ) {
         self.moodManager = moodManager
         self.dashboardManager = dashboardManager
+        self.dashboardCache = dashboardCache
+        self.pendingMoodLogService = pendingMoodLogService
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSyncDidComplete),
+            name: .syncDidComplete,
+            object: nil
+        )
     }
-    
+
+    @objc private func handleSyncDidComplete() {
+        fetchDashboardData()
+    }
+
     // MARK: - Actions
-    
-    func handleMoodLog(with requestData: MoodLogData){
+
+    func handleMoodLog(with requestData: MoodLogData) {
+        guard ConnectivityMonitor.shared.isConnected else {
+            pendingMoodLogService.enqueue(requestData)
+            onLoggingSuccess?()
+            return
+        }
+
         Task { [weak self] in
             guard let self = self else { return }
-            
+
             onAsyncStart?()
             defer { onAsyncEnd?() }
-            
+
             do {
                 try await moodManager.logMood(with: requestData)
                 onLoggingSuccess?()
-                
+
             } catch let apiError as APIError {
                 Logger.shared.error("APIError in HomeViewModel", fields: [
                     "code": apiError.code,
@@ -62,7 +86,7 @@ class HomeViewModel{
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(alertContent.message)
                 }
-                
+
             } catch let networkError as NetworkError {
                 Logger.shared.error("NetworkError in HomeViewModel", fields: [
                     "error": String(describing: networkError)
@@ -70,7 +94,7 @@ class HomeViewModel{
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(networkError.presentation.message)
                 }
-                
+
             } catch let clientError as APIClientError {
                 Logger.shared.error("APIClientError in HomeViewModel", fields: [
                     "error": String(describing: clientError)
@@ -78,7 +102,7 @@ class HomeViewModel{
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     self.onMessage?(clientError.presentation.message)
                 }
-                
+
             } catch {
                 Logger.shared.error("Unknown error in HomeViewModel", fields: [
                     "errorType": String(describing: type(of: error)),
@@ -90,38 +114,41 @@ class HomeViewModel{
             }
         }
     }
-    
+
     func fetchDashboardData() {
         Task { [weak self] in
             guard let self = self else { return }
-            
+
             onInsightsState?(.loading)
             onWeeklyMoodState?(.loading)
-            
+
+            guard ConnectivityMonitor.shared.isConnected else {
+                if let cached = dashboardCache.load() {
+                    applyPayload(cached)
+                } else {
+                    onWeeklyMoodState?(.error)
+                    onInsightsState?(.error("No cached data available"))
+                    onDominantMoodState?(.unavailableNetworkError)
+                }
+                onStreakVisibilityChange?(false)
+                return
+            }
+
             do {
                 let payload = try await dashboardManager.fetchDashboard()
-                let insightsData = makeInsightsViewData(from: payload.monthlyTopMoods)
-                let weeklyData = makeWeeklyMoodData(from: payload.weeklyMoodStrip)
-
-                if insightsData.isEmpty {
-                    onInsightsState?(.empty)
-                    onDominantMoodState?(.unavailableNoData)
-                } else {
-                    onInsightsState?(.loaded(insightsData))
-                    let sorted = insightsData.sorted { $0.percentage > $1.percentage }
-                    if let dominant = sorted.first {
-                        onDominantMoodState?(.loaded(label: dominant.label, color: dominant.color))
-                    } else {
-                        onDominantMoodState?(.unavailableNoData)
-                    }
-                }
-                onWeeklyMoodState?(.loaded(weeklyData))
-                onStreakUpdate?(payload.streakWidget.currentStreak)
+                dashboardCache.save(payload)
+                applyPayload(payload)
+                onStreakVisibilityChange?(true)
             } catch {
-                let errorMessage = message(for: error)
-                onWeeklyMoodState?(.error)
-                onInsightsState?(.error(errorMessage))
-                onDominantMoodState?(.unavailableNetworkError)
+                if let cached = dashboardCache.load() {
+                    applyPayload(cached)
+                } else {
+                    let errorMessage = message(for: error)
+                    onWeeklyMoodState?(.error)
+                    onInsightsState?(.error(errorMessage))
+                    onDominantMoodState?(.unavailableNetworkError)
+                }
+                onStreakVisibilityChange?(false)
             }
         }
     }
@@ -171,9 +198,31 @@ class HomeViewModel{
             }
         }
     }
-    
+
+    // MARK: - Private Helpers
+
+    private func applyPayload(_ payload: DashboardPayload) {
+        let insightsData = makeInsightsViewData(from: payload.monthlyTopMoods)
+        let weeklyData = makeWeeklyMoodData(from: payload.weeklyMoodStrip)
+
+        if insightsData.isEmpty {
+            onInsightsState?(.empty)
+            onDominantMoodState?(.unavailableNoData)
+        } else {
+            onInsightsState?(.loaded(insightsData))
+            let sorted = insightsData.sorted { $0.percentage > $1.percentage }
+            if let dominant = sorted.first {
+                onDominantMoodState?(.loaded(label: dominant.label, color: dominant.color))
+            } else {
+                onDominantMoodState?(.unavailableNoData)
+            }
+        }
+        onWeeklyMoodState?(.loaded(weeklyData))
+        onStreakUpdate?(payload.streakWidget.currentStreak)
+    }
+
     // MARK: - Mapping Helpers
-    
+
     private func makeInsightsViewData(from moods: [MonthlyMood]) -> [MoodInsightsChartViewData] {
         moods.map { moodData in
             let normalized = normalizePercentage(moodData.percentage)
@@ -186,28 +235,28 @@ class HomeViewModel{
             )
         }
     }
-    
+
     private func makeWeeklyMoodData(from strip: [String: String?]) -> [DailyMoodCircleData] {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone.current
-        
+
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        
+
         let sortedDays = strip.compactMap { dateString, moodString -> (Date, String?)? in
             guard let date = formatter.date(from: dateString) else { return nil }
             return (date, moodString)
         }
         .sorted { $0.0 < $1.0 }
-        
+
         return sortedDays.map { date, moodString in
             let day = calendar.component(.day, from: date)
             let isToday = calendar.isDate(date, inSameDayAs: today)
             let isFuture = date > today
             let mood = moodString.flatMap { Mood(rawValue: $0.lowercased()) }
-            
+
             return DailyMoodCircleData(
                 date: "\(day)",
                 moodColor: mood?.color,
@@ -217,12 +266,12 @@ class HomeViewModel{
             )
         }
     }
-    
+
     private func normalizePercentage(_ value: Double) -> CGFloat {
         let normalized = value > 1 ? value / 100 : value
         return CGFloat(normalized)
     }
-    
+
     private func message(for error: Error) -> String {
         if let apiError = error as? APIError {
             return apiError.presentation.message

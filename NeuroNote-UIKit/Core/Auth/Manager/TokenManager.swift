@@ -17,7 +17,13 @@ final class TokenManager: TokenManagerProtocol {
     static let shared = TokenManager()
     private let session: NetworkSession
 
-    init(session: NetworkSession = URLSession.shared) {
+    init(session: NetworkSession = {
+        #if DEBUG
+        return NetworkService.defaultSession
+        #else
+        return URLSession.shared
+        #endif
+    }()) {
         self.session = session
     }
 

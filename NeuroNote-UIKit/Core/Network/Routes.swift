@@ -14,7 +14,7 @@ struct Route {
 
 enum Routes {
     // Auth Service Routes
-    static let base                     = "https://127.0.0.1:8443"   // Base URL, shall be updated to production later
+    static let base                     = "https://192.168.1.5:8443"   // Base URL, shall be updated to production later
     static let signUp                   = Route(path: "/api/v1/auth/signup", method: .post)
     static let signIn                   = Route(path: "/api/v1/auth/signin", method: .post)
     static let requestSignupOTP         = Route(path: "/api/v1/auth/signup/otp", method: .post)
@@ -32,4 +32,5 @@ enum Routes {
     static let dashboard                = Route(path: "/api/v1/dashboard", method: .get)
     static let monthlyTopMoods          = Route(path: "/api/v1/mood/monthly/top-moods", method: .get)
     static let weeklyMoodStrip          = Route(path: "/api/v1/mood/weekly/mood-strip", method: .get)
+    static let syncDashboard            = Route(path: "/api/v1/dashboard/sync", method: .post)
 }
