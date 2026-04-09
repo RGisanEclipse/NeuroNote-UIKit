@@ -14,7 +14,7 @@ final class CoreDataStack {
         persistentContainer = NSPersistentContainer(name: "NeuroNote_UIKit")
         persistentContainer.loadPersistentStores { _, error in
             if let error {
-                fatalError("CoreData failed to load: \(error)")
+                Logger.shared.error("CoreData failed to load", fields: ["error": error.localizedDescription])
             }
         }
     }
