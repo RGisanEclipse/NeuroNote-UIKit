@@ -284,11 +284,18 @@ class HomeViewController: UIViewController {
 //        }
         
         viewModel.onLoggingSuccess = { [weak self] in
-            self?.presentInAppNotificationBanner(
-                withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText
-            )
-            // Refresh data after logging
-            self?.fetchDashboardData()
+            guard let self else { return }
+            if ConnectivityMonitor.shared.isConnected {
+                presentInAppNotificationBanner(withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText)
+                fetchDashboardData()
+            } else {
+                presentInAppNotificationBanner(withText: "Mood saved — will sync when you're back online.")
+            }
+        }
+
+        viewModel.onStreakVisibilityChange = { [weak self] isVisible in
+            self?.streakInsightCard.isHidden = !isVisible
+            self?.tilesSpacer.isHidden = isVisible
         }
         
         viewModel.onMessage = { [weak self] message in
@@ -389,6 +396,8 @@ class HomeViewController: UIViewController {
         
         tilesStack.addArrangedSubview(breatheCard)
         tilesStack.addArrangedSubview(streakInsightCard)
+        tilesStack.addArrangedSubview(tilesSpacer)
+        tilesSpacer.isHidden = true
         scrollContentStack.addArrangedSubview(tilesStack)
         
         backgroundAnimationView.play()
