@@ -56,7 +56,6 @@ class BreathingActivityViewController: UIViewController {
     private var currentPhaseIndex: Int = 0
     private var sessionTimer:    Timer?
     private var isRunning:       Bool = false
-    private var shownMilestones: Set<Int> = []
 
     private var currentPhase: BreathingPhase {
         BreathingPhase.allCases[currentPhaseIndex % BreathingPhase.allCases.count]
@@ -119,8 +118,8 @@ class BreathingActivityViewController: UIViewController {
     private lazy var timerLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.font          = UIFont(name: Fonts.BeachDay, size: 60)
-        l.textColor     = .white
+        l.font      = UIFont(name: Fonts.BeachDay, size: 60)
+        l.textColor = .white
         l.textAlignment = .center
         l.text          = "3:30"
         return l
@@ -138,8 +137,8 @@ class BreathingActivityViewController: UIViewController {
     private lazy var phaseLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.font          = UIFont(name: Fonts.BeachDay, size: 38)
-        l.textColor     = .white
+        l.font      = UIFont(name: Fonts.BeachDay, size: 38)
+        l.textColor = .white
         l.textAlignment = .center
         l.text          = "Settle in"
         return l
@@ -149,27 +148,18 @@ class BreathingActivityViewController: UIViewController {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
         l.font          = UIFont(name: Fonts.MontserratMedium, size: 15)
-        l.textColor     = UIColor.white.withAlphaComponent(0.60)
+        l.textColor = UIColor.white.withAlphaComponent(0.60)
         l.textAlignment = .center
         l.numberOfLines = 1
         l.text          = "Tap Begin to start your session"
         return l
     }()
 
-    private lazy var milestoneLabel: UILabel = {
-        let l = UILabel()
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.font      = UIFont(name: Fonts.MontserratSemiBold, size: 14)
-        l.textColor = UIColor(red: 0.78, green: 0.74, blue: 1.0, alpha: 0.92)
-        l.textAlignment = .center
-        l.alpha = 0
-        return l
-    }()
 
     private lazy var progressTrack: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor   = UIColor.white.withAlphaComponent(0.11)
+        v.backgroundColor = UIColor.white.withAlphaComponent(0.11)
         v.layer.cornerRadius = 4
         v.clipsToBounds = true
         return v
@@ -213,8 +203,8 @@ class BreathingActivityViewController: UIViewController {
     private lazy var actionLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.font          = UIFont(name: Fonts.MontserratBold, size: 17)
-        l.textColor     = .white
+        l.font      = UIFont(name: Fonts.MontserratBold, size: 17)
+        l.textColor = .white
         l.textAlignment = .center
         l.text          = "Begin"
         return l
@@ -273,7 +263,6 @@ class BreathingActivityViewController: UIViewController {
         lottieContainer.addSubview(lottieView)
         view.addSubview(phaseLabel)
         view.addSubview(instructionLabel)
-        view.addSubview(milestoneLabel)
         view.addSubview(progressTrack)
         progressTrack.addSubview(progressFill)
         view.addSubview(actionButton)
@@ -346,8 +335,6 @@ class BreathingActivityViewController: UIViewController {
             progressFillWidth!,
 
             // Milestone (floats above progress track)
-            milestoneLabel.bottomAnchor.constraint(equalTo: progressTrack.topAnchor, constant: -10),
-            milestoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
     }
 
@@ -440,7 +427,11 @@ class BreathingActivityViewController: UIViewController {
         endSession()
         lottieView.stop()
         actionLabel.text = "Done"
-        actionButton.isUserInteractionEnabled = false
+        actionButton.isUserInteractionEnabled = true
+
+        UIView.animate(withDuration: 0.3) {
+            self.closeButton.alpha = 0
+        }
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -452,10 +443,9 @@ class BreathingActivityViewController: UIViewController {
             self.phaseLabel.text = "Well done!"
         }
         UIView.transition(with: instructionLabel, duration: 0.5, options: .transitionCrossDissolve) {
-            self.instructionLabel.text = "You've completed your session, Hoping you're feeling better"
+            self.instructionLabel.text = "Stay with yourself for a moment"
         }
 
-        flashMilestone("Session complete!")
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
@@ -488,17 +478,6 @@ class BreathingActivityViewController: UIViewController {
             transitionPhase(to: currentPhaseIndex)
         }
 
-        // Milestone messages
-        let elapsedSec = Int(elapsed)
-        let milestones: [Int: String] = [
-            60:  "Keep it up! 🌿",
-            90:  "Halfway there! ✨",
-            150: "Almost done! 💫",
-        ]
-        if let msg = milestones[elapsedSec], !shownMilestones.contains(elapsedSec) {
-            shownMilestones.insert(elapsedSec)
-            flashMilestone(msg)
-        }
     }
 
     // MARK: - Phase Transition
@@ -541,22 +520,6 @@ class BreathingActivityViewController: UIViewController {
         CATransaction.commit()
     }
 
-    // MARK: - Milestone Flash
-
-    private func flashMilestone(_ text: String) {
-        milestoneLabel.text      = text
-        milestoneLabel.alpha     = 0
-        milestoneLabel.transform = CGAffineTransform(translationX: 0, y: 10)
-
-        UIView.animate(withDuration: 0.4, delay: 0, options: .curveEaseOut) {
-            self.milestoneLabel.alpha     = 1
-            self.milestoneLabel.transform = .identity
-        } completion: { _ in
-            UIView.animate(withDuration: 0.35, delay: 2.2, options: .curveEaseIn) {
-                self.milestoneLabel.alpha = 0
-            }
-        }
-    }
 
     // MARK: - Actions
 
@@ -571,7 +534,11 @@ class BreathingActivityViewController: UIViewController {
             }
         }
 
-        isRunning ? pauseSession() : startSession()
+        if actionLabel.text == "Done" {
+            dismiss(animated: true)
+        } else {
+            isRunning ? pauseSession() : startSession()
+        }
     }
 
     @objc private func closeTapped() {
