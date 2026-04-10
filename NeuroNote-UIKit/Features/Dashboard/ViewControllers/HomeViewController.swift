@@ -289,7 +289,7 @@ class HomeViewController: UIViewController {
                 presentInAppNotificationBanner(withText: Constants.HomeViewControllerConstants.moodLoggingSuccessText)
                 fetchDashboardData()
             } else {
-                presentInAppNotificationBanner(withText: "Mood saved — will sync when you're back online.")
+                presentInAppNotificationBanner(withText: "Mood saved! No internet? No worries! We'll sync it for you once you're back online!")
             }
         }
 

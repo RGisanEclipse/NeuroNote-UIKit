@@ -49,17 +49,6 @@ class InsightsChartView: UIView {
         return stack
     }()
     
-    private let legendStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.axis = .horizontal
-        stack.spacing = 16
-        stack.alignment = .center
-        stack.distribution = .fill
-        return stack
-    }()
-    
-    
     // Skeleton container
     private let skeletonContainer: UIView = {
         let view = UIView()
@@ -75,12 +64,6 @@ class InsightsChartView: UIView {
         stack.alignment = .fill
         stack.distribution = .fillEqually
         return stack
-    }()
-    
-    private let skeletonLegendView: SkeletonView = {
-        let view = SkeletonView(cornerRadius: 8)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
     }()
     
     // Error container
@@ -207,7 +190,6 @@ class InsightsChartView: UIView {
         cardView.addSubview(errorContainer)
 
         contentContainer.addSubview(barsStackView)
-        contentContainer.addSubview(legendStackView)
 
         NSLayoutConstraint.activate([
             cardView.topAnchor.constraint(equalTo: topAnchor),
@@ -224,11 +206,7 @@ class InsightsChartView: UIView {
             barsStackView.topAnchor.constraint(equalTo: contentContainer.topAnchor, constant: 16),
             barsStackView.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor, constant: 16),
             barsStackView.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant: -16),
-
-            legendStackView.topAnchor.constraint(equalTo: barsStackView.bottomAnchor, constant: 12),
-            legendStackView.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor, constant: 16),
-            legendStackView.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant: -16),
-            legendStackView.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor, constant: -14),
+            barsStackView.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor, constant: -16),
 
             // Skeleton container
             skeletonContainer.topAnchor.constraint(equalTo: cardView.topAnchor),
@@ -278,7 +256,6 @@ class InsightsChartView: UIView {
         skeletonStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
         skeletonContainer.addSubview(skeletonStackView)
-        skeletonContainer.addSubview(skeletonLegendView)
         
         for _ in 0..<skeletonCount {
             let skeletonBar = SkeletonBarView()
@@ -292,12 +269,7 @@ class InsightsChartView: UIView {
             skeletonStackView.topAnchor.constraint(equalTo: skeletonContainer.topAnchor, constant: 16),
             skeletonStackView.leadingAnchor.constraint(equalTo: skeletonContainer.leadingAnchor, constant: 16),
             skeletonStackView.trailingAnchor.constraint(equalTo: skeletonContainer.trailingAnchor, constant: -16),
-            
-            skeletonLegendView.topAnchor.constraint(equalTo: skeletonStackView.bottomAnchor, constant: 22),
-            skeletonLegendView.leadingAnchor.constraint(equalTo: skeletonContainer.leadingAnchor, constant: 16),
-            skeletonLegendView.trailingAnchor.constraint(equalTo: skeletonContainer.trailingAnchor, constant: -16),
-            skeletonLegendView.heightAnchor.constraint(equalToConstant: 18),
-            skeletonLegendView.bottomAnchor.constraint(equalTo: skeletonContainer.bottomAnchor, constant: -14)
+            skeletonStackView.bottomAnchor.constraint(equalTo: skeletonContainer.bottomAnchor, constant: -16),
         ])
     }
     
@@ -342,7 +314,6 @@ class InsightsChartView: UIView {
     
     private func showLoading(animated: Bool, duration: TimeInterval) {
         skeletonBarViews.forEach { $0.startShimmer() }
-        skeletonLegendView.startShimmer()
         emptyAnimationView.stop()
 
         UIView.animate(withDuration: duration) {
@@ -355,7 +326,6 @@ class InsightsChartView: UIView {
     
     private func showLoaded(data: [MoodInsightsChartViewData], animated: Bool, duration: TimeInterval) {
         skeletonBarViews.forEach { $0.stopShimmer() }
-        skeletonLegendView.stopShimmer()
         
         configure(with: data)
         
@@ -371,7 +341,6 @@ class InsightsChartView: UIView {
 
     private func showEmptyState(animated: Bool, duration: TimeInterval) {
         skeletonBarViews.forEach { $0.stopShimmer() }
-        skeletonLegendView.stopShimmer()
 
         if let animation = LottieAnimation.named(Constants.animations.emptyBox) {
             emptyAnimationView.animation = animation
@@ -388,7 +357,6 @@ class InsightsChartView: UIView {
 
     private func showError(message: String, animated: Bool, duration: TimeInterval) {
         skeletonBarViews.forEach { $0.stopShimmer() }
-        skeletonLegendView.stopShimmer()
         
         errorLabel.text = message
         emptyAnimationView.stop()
@@ -428,12 +396,9 @@ class InsightsChartView: UIView {
     private func configure(with data: [MoodInsightsChartViewData]) {
         self.moodData = data
         
-        // Clear existing bars and legend items
         barViews.forEach { $0.removeFromSuperview() }
         barViews.removeAll()
-        legendStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        // Create bars
+
         for mood in data {
             let barView = InsightsBarView(configuration: .init(
                 icon: mood.icon,
@@ -446,50 +411,6 @@ class InsightsChartView: UIView {
             barsStackView.addArrangedSubview(barView)
             barViews.append(barView)
         }
-        
-        // Create legend items
-        for mood in data {
-            let legendItem = createLegendItem(color: mood.color, label: mood.label)
-            legendStackView.addArrangedSubview(legendItem)
-        }
-    }
-    
-    private func createLegendItem(color: UIColor, label: String) -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        
-        let dot = UIView()
-        dot.translatesAutoresizingMaskIntoConstraints = false
-        dot.backgroundColor = color
-        dot.layer.cornerRadius = 6
-        
-        let labelView = UILabel()
-        labelView.translatesAutoresizingMaskIntoConstraints = false
-        labelView.text = label
-        labelView.font = UIFont(name: Fonts.MontserratMedium, size: 13) ?? .systemFont(ofSize: 13, weight: .medium)
-        labelView.textColor = .secondaryLabel
-        labelView.adjustsFontSizeToFitWidth = true
-        labelView.minimumScaleFactor = 0.65
-        labelView.numberOfLines = 1
-        labelView.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        
-        container.addSubview(dot)
-        container.addSubview(labelView)
-        
-        NSLayoutConstraint.activate([
-            dot.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            dot.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            dot.widthAnchor.constraint(equalToConstant: 12),
-            dot.heightAnchor.constraint(equalToConstant: 12),
-            
-            labelView.leadingAnchor.constraint(equalTo: dot.trailingAnchor, constant: 8),
-            labelView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            labelView.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor),
-            
-            container.heightAnchor.constraint(equalToConstant: 20)
-        ])
-        
-        return container
     }
     
     // MARK: - Animation
