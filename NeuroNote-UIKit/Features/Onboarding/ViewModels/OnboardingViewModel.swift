@@ -41,9 +41,13 @@ class OnboardingViewModel {
             return
         }
         
+        guard ConnectivityMonitor.shared.isConnected else {
+            onMessage?(NetworkError.noInternet.presentation)
+            return
+        }
         Task { [weak self] in
             guard let self = self else { return }
-            
+
             onAsyncStart?()
             defer { onAsyncEnd?() }
             

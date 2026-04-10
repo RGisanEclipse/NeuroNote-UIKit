@@ -37,6 +37,10 @@ class ResetPasswordViewModel {
             return
         }
         
+        guard ConnectivityMonitor.shared.isConnected else {
+            onMessage?(NetworkError.noInternet.presentation)
+            return
+        }
         // Make call to Backend
         Task { [weak self] in
             guard let self = self else { return }

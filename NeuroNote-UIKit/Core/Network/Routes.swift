@@ -14,7 +14,7 @@ struct Route {
 
 enum Routes {
     // Auth Service Routes
-    static let base                     = "https://192.168.1.5:8443"   // Base URL, shall be updated to production later
+    static let base                     = "https://192.168.1.4:8443"   // Base URL, shall be updated to production later
     static let signUp                   = Route(path: "/api/v1/auth/signup", method: .post)
     static let signIn                   = Route(path: "/api/v1/auth/signin", method: .post)
     static let requestSignupOTP         = Route(path: "/api/v1/auth/signup/otp", method: .post)

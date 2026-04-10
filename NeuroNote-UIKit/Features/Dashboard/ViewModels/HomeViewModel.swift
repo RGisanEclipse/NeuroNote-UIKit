@@ -119,30 +119,35 @@ class HomeViewModel {
         Task { [weak self] in
             guard let self = self else { return }
 
-            onInsightsState?(.loading)
-            onWeeklyMoodState?(.loading)
+            // 1. Show cache instantly if available, skeletons only if nothing cached
+            if let cached = dashboardCache.load() {
+                applyPayload(cached)
+                onStreakVisibilityChange?(false)
+            } else {
+                onInsightsState?(.loading)
+                onWeeklyMoodState?(.loading)
+            }
 
+            // 2. Bail early if offline — cache was already shown above
             guard ConnectivityMonitor.shared.isConnected else {
-                if let cached = dashboardCache.load() {
-                    applyPayload(cached)
-                } else {
+                if dashboardCache.load() == nil {
                     onWeeklyMoodState?(.error)
                     onInsightsState?(.error("No cached data available"))
                     onDominantMoodState?(.unavailableNetworkError)
                 }
-                onStreakVisibilityChange?(false)
                 return
             }
 
+            // 3. Fetch fresh data in background, update UI when it arrives
             do {
                 let payload = try await dashboardManager.fetchDashboard()
                 dashboardCache.save(payload)
                 applyPayload(payload)
                 onStreakVisibilityChange?(true)
             } catch {
-                if let cached = dashboardCache.load() {
-                    applyPayload(cached)
-                } else {
+                // Fresh fetch failed — if cache was already shown, stay silent
+                // Only show error if there was nothing to show at all
+                if dashboardCache.load() == nil {
                     let errorMessage = message(for: error)
                     onWeeklyMoodState?(.error)
                     onInsightsState?(.error(errorMessage))
@@ -156,6 +161,12 @@ class HomeViewModel {
     func refreshMonthlyMoodInsights() {
         Task { [weak self] in
             guard let self = self else { return }
+
+            guard ConnectivityMonitor.shared.isConnected else {
+                onInsightsState?(.error("No internet connection"))
+                onDominantMoodState?(.unavailableNetworkError)
+                return
+            }
 
             onInsightsState?(.loading)
 
@@ -186,6 +197,11 @@ class HomeViewModel {
     func refreshWeeklyMoodStrip() {
         Task { [weak self] in
             guard let self = self else { return }
+
+            guard ConnectivityMonitor.shared.isConnected else {
+                onWeeklyMoodState?(.error)
+                return
+            }
 
             onWeeklyMoodState?(.loading)
 

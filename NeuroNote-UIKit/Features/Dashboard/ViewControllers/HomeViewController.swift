@@ -387,7 +387,7 @@ class HomeViewController: UIViewController {
         view.addSubview(greetingLabel)
         view.addSubview(moodAnimationFeelingStack)
         view.addSubview(logMoodButton)
-        
+
         contentCardView.addSubview(contentScrollView)
         contentScrollView.addSubview(scrollContentStack)
         

@@ -36,6 +36,10 @@ class LoginViewModel {
             onMessage?(emailAlert)
             return
         }
+        guard ConnectivityMonitor.shared.isConnected else {
+            onMessage?(NetworkError.noInternet.presentation)
+            return
+        }
         // Network call to Backend
         Task { [weak self] in
             guard let self = self else { return }
@@ -83,6 +87,10 @@ class LoginViewModel {
             }
         }
         
+        guard ConnectivityMonitor.shared.isConnected else {
+            onMessage?(NetworkError.noInternet.presentation)
+            return
+        }
         Task { [weak self] in
             guard let self = self else { return }
             onAsyncStart?()

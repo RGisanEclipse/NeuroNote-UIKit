@@ -50,6 +50,10 @@ class OTPViewModel {
     // MARK: - OTP Verification
     @MainActor
     func verify(otp: String, userId: String, purpose: OTPPurpose) {
+        guard ConnectivityMonitor.shared.isConnected else {
+            onNetworkError?(NetworkError.noInternet.presentation.title + "\n" + NetworkError.noInternet.presentation.message)
+            return
+        }
         onAsyncStart?()
         Task {
             defer { onAsyncEnd?() }
@@ -72,8 +76,12 @@ class OTPViewModel {
     // MARK: - Resend OTP
     @MainActor
     func resendOTP(requestData: OTPRequestData, purpose: OTPPurpose) {
+        guard ConnectivityMonitor.shared.isConnected else {
+            onNetworkError?(NetworkError.noInternet.presentation.title + "\n" + NetworkError.noInternet.presentation.message)
+            return
+        }
         onAsyncStart?()
-        
+
         Task {
             defer { onAsyncEnd?() }
             
