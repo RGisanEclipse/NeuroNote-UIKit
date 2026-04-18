@@ -1,0 +1,38 @@
+//
+//  AuthError.swift
+//  AVYO
+//
+//  Created by Eclipse on 05/07/25.
+//
+
+import Foundation
+
+enum AuthError: LocalizedError, Equatable {
+    case badURL
+    case incorrectPassword
+    case invalidResponse
+    case decodingFailed
+    case unexpectedError
+    case noTokenReceived
+    case noUserIdReceived
+    case userNotVerified
+    case noRefreshToken
+    case server(ServerErrorCode)
+    case missingToken
+
+    var errorDescription: String? {
+        switch self {
+        case .badURL:              return "Invalid URL"
+        case .incorrectPassword:   return "incorrect password"
+        case .invalidResponse:     return "Invalid server response"
+        case .decodingFailed:      return "Failed to read server data"
+        case .noTokenReceived:     return "No token received"
+        case .noUserIdReceived:    return "No user id received"
+        case .userNotVerified:     return "User not verified"
+        case .noRefreshToken:      return "No refresh token"
+        case .server(let code):    return code.rawValue
+        case .unexpectedError:     return "Unexpected error"
+        case .missingToken:        return "Missing Token"
+        }
+    }
+}
