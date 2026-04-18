@@ -56,9 +56,7 @@ struct Constants{
         static let breathing       = "breathing"
     }
     struct LaunchScreenConstants {
-        
-        static let logoImageName = "NeuroNote"
-        
+        static let logoImageName = "AVYO"
     }
     struct LoginViewControllerConstants {
         
